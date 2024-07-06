@@ -1,0 +1,1 @@
+export const IcoContract = '0x19ec94D98178E11187D118e490E464A424a4fDD8'
