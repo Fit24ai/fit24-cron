@@ -85,18 +85,23 @@ export class ContractService {
     }
   }
 
-  private hasRun = false;
-
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  async handleCron() {
-    if (this.hasRun) {
-      return;
+  public async updateClaimTreasury() {
+    try {
+      await this.signedIcoContract.claimTreasuryReward();
+    } catch (error) {
+      console.log('Unable to claim treasury reward');
     }
+  }
 
-    this.hasRun = true;
-
+  // private hasRun = false;
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleCron() {
+    // if (this.hasRun) {
+    //   return;
+    // }
+    // this.hasRun = true;
     console.log('Hello Ethers');
-    // await this.signedIcoContract.claimTreasuryReward();
+    await this.updateClaimTreasury();
     await this.readOnly();
   }
 }
