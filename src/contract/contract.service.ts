@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { EthersService } from 'src/ethers/ethers.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { formatUnits } from 'ethers';
+import { BigNumberish, formatUnits } from 'ethers';
+import { Address } from 'cluster';
 
 const ether = new EthersService();
 @Injectable()
@@ -48,7 +49,7 @@ export class ContractService {
     '0x50Ca1fde29D62292a112A72671E14a5d4f05580f',
   ];
 
-  public async getActiveStakesOfUser(user) {
+  public async getActiveStakesOfUser(user: string) {
     try {
       return await this.icoContract.getUserActiveStakes(user);
     } catch (error) {
@@ -57,27 +58,25 @@ export class ContractService {
     }
   }
 
-  public async processWithdrawTokens(activeStake, user) {
+  public async processWithdrawTokens(activeStake: BigNumberish, user: string) {
     console.log(user, Number(formatUnits(activeStake, 0)));
     try {
-      
       const withdraw = await this.signedIcoContract.withdrawUserTokens(
         user,
         Number(formatUnits(activeStake, 0)),
       );
     } catch (error) {
-      console.log("withdraw Unsuccessfull", error);
+      console.log('withdraw Unsuccessfull', error);
     }
   }
 
-  public async processStake(activeStake, user) {
+  public async processStake(activeStake: BigNumberish, user: string) {
     try {
       console.log('stake', activeStake);
       const idToStake = await this.icoContract.idToStake(activeStake);
       if (!idToStake) {
         return;
       }
-
       const poolType = formatUnits(idToStake[3], 0);
       const stakeDuration = await this.icoContract.stakeDuration(poolType);
       const blockTimestamp = BigInt(
@@ -93,14 +92,13 @@ export class ContractService {
         this.processWithdrawTokens(activeStake, user);
       } else {
         console.log("Don't Continue");
-        // this.processWithdrawTokens(activeStake, user);
       }
     } catch (error) {
       console.error('Error processing stake:');
     }
   }
 
-  public async handleActiveStakes(activeStakes, user) {
+  public async handleActiveStakes(activeStakes: BigNumberish[], user: string) {
     for (const activeStake of activeStakes) {
       await this.processStake(activeStake, user);
     }
@@ -112,6 +110,7 @@ export class ContractService {
       if (!users) {
         return;
       }
+      console.log(users);
       for (const user of users) {
         console.log('user:', user);
         const activeStakes = await this.getActiveStakesOfUser(user);
