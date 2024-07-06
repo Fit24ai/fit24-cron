@@ -2,52 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { EthersService } from 'src/ethers/ethers.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { BigNumberish, formatUnits } from 'ethers';
-import { Address } from 'cluster';
 
 const ether = new EthersService();
 @Injectable()
 export class ContractService {
   public icoContract = ether.icoContract;
   public signedIcoContract = ether.signedIcoContract;
-
-  // public async readOnly() {
-  //   const users = await this.icoContract.getAllUsers();
-  //   if (users) {
-  //     users.map((item) => {
-  //       console.log('user', item);
-  //       const userActiveStakes = async () => {
-  //         const activeStakes = await this.icoContract.getUserActiveStakes(item);
-  //         console.log('activeStakes', activeStakes);
-  //         const idToStake = await this.icoContract.idToStake('1');
-  //         if (idToStake) {
-  //           console.log('idToStake', idToStake);
-  //           let poolTime = formatUnits(idToStake[3], 0);
-  //           console.log('poolTime', poolTime);
-  //           const stakeDuration =
-  //             await this.icoContract.stakeDuration(poolTime);
-  //           console.log(stakeDuration);
-  //           const time = stakeDuration + idToStake[4];
-  //           console.log('time', time);
-  //           const blockTimestamp = (await ether.provider.getBlock('latest'))
-  //             .timestamp;
-  //           console.log('blockTimestamp', BigInt(blockTimestamp));
-  //           if (time < blockTimestamp) {
-  //             console.log("Continue");
-  //           }else{
-  //               console.log("Dont Continue")
-  //           }
-  //         }
-  //       };
-  //       userActiveStakes();
-  //     });
-  //   }
-  // }
-
-  public u = [
-    '0x50Ca1fde29D62292a112A72671E14a5d4f05580f',
-    '0x50Ca1fde29D62292a112A72671E14a',
-    '0x50Ca1fde29D62292a112A72671E14a5d4f05580f',
-  ];
 
   public async getActiveStakesOfUser(user: string) {
     try {
@@ -140,47 +100,3 @@ export class ContractService {
     await this.readOnly();
   }
 }
-
-// if (users) {
-//   console.log('No. of users : ', users.length);
-//   for (const user of users) {
-//     console.log('user', user);
-
-//     const [activeStakes, block] = await Promise.all([
-//       this.icoContract.getUserActiveStakes(user),
-//       // this.icoContract.idToStake('1'),
-//       ether.provider.getBlock('latest'),
-//     ]);
-
-//     if (activeStakes) {
-//       console.log('activeStakes', activeStakes);
-
-//       for (const activestake of activeStakes) {
-//         console.log('Particular activestake', activestake);
-//         const idToStake = await this.icoContract.idToStake(activestake);
-//         if (idToStake) {
-//           console.log('idToStake', idToStake);
-
-//           let poolType = formatUnits(idToStake[3], 0);
-//           console.log('poolTime', poolType);
-
-//           const stakeDuration =
-//             await this.icoContract.stakeDuration(poolType);
-//           console.log('stakeDuration', stakeDuration);
-
-//           const time = stakeDuration + idToStake[4];
-//           console.log('time', time);
-
-//           const blockTimestamp = BigInt(block.timestamp);
-//           console.log('blockTimestamp', blockTimestamp);
-
-//           if (time < blockTimestamp) {
-//             console.log('Continue');
-//           } else {
-//             console.log("Don't Continue");
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
