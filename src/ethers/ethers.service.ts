@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Contract, Interface, JsonRpcProvider, Wallet } from 'ethers';
-import { IcoContract } from './libs/contract';
+import { IcoContract, StakingContract } from './libs/contract';
 import { icoAbi } from './libs/abi/icoAbi';
 import { config } from 'dotenv';
+import stakingAbi from './libs/abi/stakingAbi';
 
 config();
 
@@ -18,4 +19,10 @@ export class EthersService {
   public signedIcoContract = new Contract(IcoContract, icoAbi, this.signer);
 
   public icoInterface = new Interface(icoAbi);
+
+  public stakingInterface  = new Interface(stakingAbi);
+
+  public binanceStakingContract =  new Contract(StakingContract,stakingAbi,this.provider)
+
+
 }
