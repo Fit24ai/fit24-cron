@@ -15,8 +15,8 @@ export class EthersService {
 
   private readonly signer = new Wallet(process.env.PRIVATE_KEY, this.provider);
 
-  public icoContract = new Contract(IcoContract, icoAbi, this.provider);
-  public signedIcoContract = new Contract(IcoContract, icoAbi, this.signer);
+  public icoContract = new Contract(StakingContract, stakingAbi, this.provider);
+  public signedIcoContract = new Contract(StakingContract, stakingAbi, this.signer);
 
   public icoInterface = new Interface(icoAbi);
 

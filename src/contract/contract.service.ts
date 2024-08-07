@@ -8,6 +8,7 @@ const ether = new EthersService();
 export class ContractService {
   public icoContract = ether.icoContract;
   public signedIcoContract = ether.signedIcoContract;
+  public stakingContract = ether.binanceStakingContract;
 
   public async getActiveStakesOfUser(user: string) {
     try {
