@@ -130,9 +130,9 @@ export class StakingService {
       });
     });
   }
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  handleCron() {
-    this.syncClaimedRewardForStake(999);
-    this.syncReferralStake(999);
-  }
+  // @Cron(CronExpression.EVERY_5_MINUTES)
+  // handleCron() {
+  //   this.syncClaimedRewardForStake(999);
+  //   this.syncReferralStake(999);
+  // }
 }
