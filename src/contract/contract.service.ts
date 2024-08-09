@@ -95,7 +95,7 @@ export class ContractService {
   }
 
   // private hasRun = false;
-  @Cron(CronExpression.EVERY_30_MINUTES)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
     // if (this.hasRun) {
     //   return;
