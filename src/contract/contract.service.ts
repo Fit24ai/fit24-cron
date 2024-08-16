@@ -95,7 +95,7 @@ export class ContractService {
   }
 
   // private hasRun = false;
-  @Cron('0 10 * * *')
+  @Cron('35 10 * * 5') //10:35AMUTC
   async handleCron() {
     // if (this.hasRun) {
     //   return;
