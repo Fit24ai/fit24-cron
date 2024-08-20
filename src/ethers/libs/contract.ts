@@ -1,2 +1,2 @@
-export const IcoContract = '0xf49b1767444BAFb499E1e4c5E0603CABF89089D8'
-export const StakingContract = "0xf49b1767444BAFb499E1e4c5E0603CABF89089D8"
+export const IcoContract = '0xe3CC06a247187F8A33C50E09fE06D1537c47Ec40'
+export const StakingContract = "0xe3CC06a247187F8A33C50E09fE06D1537c47Ec40"
