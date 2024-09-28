@@ -6,6 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 // import { AppService } from './app.service';
 import { StakingModule } from './staking/staking.module';
+import { TransactionService } from './transaction/transaction.service';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -22,7 +24,8 @@ import { StakingModule } from './staking/staking.module';
     }),
     ScheduleModule.forRoot(),
     StakingModule,
+    TransactionModule,
   ],
-  providers: [ContractService],
+  providers: [ContractService, TransactionService],
 })
 export class AppModule {}

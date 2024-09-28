@@ -95,7 +95,7 @@ export class ContractService {
   }
 
   // private hasRun = false;
-  @Cron(CronExpression.EVERY_DAY_AT_7AM)
+  @Cron('0 * * * *')
   async handleCron() {
     // if (this.hasRun) {
     //   return;
@@ -104,5 +104,6 @@ export class ContractService {
     console.log('Hello Ethers');
     await this.updateClaimTreasury();
     await this.readOnly();
+
   }
 }

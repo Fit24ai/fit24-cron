@@ -25,6 +25,7 @@ export class StakingService {
   }
 
   async syncClaimedRewardForStake(block: number) {
+    console.log("yash")
     const fromBlock = await this.ethersService.provider.getBlockNumber();
     const events = await this.ethersService.provider.getLogs({
       address: StakingContract,
@@ -33,6 +34,8 @@ export class StakingService {
       topics: [process.env.REWARD_CLAIMED_TOPIC],
     });
 
+    console.log(events)
+
     events.map(async (event) => {
       const parsedEvent = this.ethersService.stakingInterface.parseLog(event);
       const isExist = await this.claimedRewardForStakeModel.findOne({
@@ -40,7 +43,7 @@ export class StakingService {
         stakeId: Number(parsedEvent.args[0]),
         walletAddress: { $regex: parsedEvent.args[1], $options: 'i' },
       });
-
+      console.log(isExist)
       if (isExist) {
         return;
       }
@@ -52,11 +55,14 @@ export class StakingService {
         timestamp: Number(parsedEvent[3]),
         txHash: event.transactionHash,
       };
+      console.log(formattedClaimedLog);
+      console.log('formattedClaimedLog');
       await this.claimedRewardForStakeModel.create(formattedClaimedLog);
     });
   }
 
   async syncReferralStake(block: number) {
+    console.log("yash1")
     const fromBlock = await this.ethersService.provider.getBlockNumber();
     const events = await this.ethersService.provider.getLogs({
       address: StakingContract,
@@ -114,6 +120,8 @@ export class StakingService {
 
           return formattedReferralLog;
         });
+        console.log('refStakedLogs');
+        console.log(refStakedLogs);
 
         await this.StakingModel.insertMany(refStakedLogs);
       }
@@ -128,10 +136,28 @@ export class StakingService {
         txHash: event.transactionHash,
         isReferred: false,
       });
+      console.log('StakingModel.create');
+      console.log(
+        Number(stakedLogs.args[5]),
+        stakedLogs.args[0],
+        this.BigIntToNumber(stakedLogs.args[1]),
+        Number(stakedLogs.args[2]) / 10,
+        Number(stakedLogs.args[3]),
+        Number(stakedLogs.args[4]),
+        stakeDuration.duration,
+        event.transactionHash,
+        false,
+      );
     });
   }
-  // @Cron(CronExpression.EVERY_5_MINUTES)
+
+  // private hasRun = false;
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   // handleCron() {
+  //   // if (this.hasRun) {
+  //   //   return;
+  //   // }
+  //   // this.hasRun = true;
   //   this.syncClaimedRewardForStake(999);
   //   this.syncReferralStake(999);
   // }
