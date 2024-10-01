@@ -6,6 +6,7 @@ import { StakingTransaction } from './schema/stakingTransaction.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import EthCrypto from 'eth-crypto';
+import BigNumber from 'bignumber.js';
 import { v4 } from 'uuid';
 import { formatUnits, parseEther, solidityPackedKeccak256 } from 'ethers';
 
@@ -199,47 +200,56 @@ export class TransactionService {
     }
 
     if (filteredLogs.length > 0) {
-      const refStakedLogs: IRefStakeLogs[] = filteredLogs.map((log) => {
-        const parsedLog =
-          this.ethersService.stakingInterface.parseLog(log).args;
+      const refStakedLogs = await Promise.all(
+        filteredLogs.map(async (log) => {
+          const parsedLog =
+            this.ethersService.stakingInterface.parseLog(log).args;
 
-        console.log('parsedLog', parsedLog);
+          const idToStake = await this.ethersService.icoContract.idToStake(
+            Number(parsedLog[2]),
+          );
+          console.log(idToStake);
 
-        const formattedReferralLog: IRefStakeLogs = {
-          stakeId: Number(parsedLog[2]),
-          walletAddress: parsedLog[0],
-          amount: this.BigIntToNumber(parsedLog[1]),
-          apr: Number(stakedLogs.args[2]) / 10,
-          poolType: Number(stakedLogs.args[3]),
-          startTime: Number(stakedLogs.args[4]),
-          stakeDuration: stakeDuration.duration,
-          txHash,
-          isReferred: true,
-          level: Number(parsedLog[3]),
-          refId: Number(parsedLog[4]),
-          transactionStatus:
-            receipt.status === 1
-              ? TransactionStatusEnum.CONFIRMED
-              : TransactionStatusEnum.FAILED,
-        };
+          const formattedReferralLog: IRefStakeLogs = {
+            stakeId: Number(parsedLog[2]),
+            walletAddress: parsedLog[0],
+            amount: this.BigToNumber(parsedLog[1]),
+            apr: Number(idToStake[2]) / 10,
+            poolType: Number(idToStake[3]),
+            startTime: Number(stakedLogs.args[4]), // Changed from stakedLogs.args[4] to parsedLog[4]
+            stakeDuration: stakeDuration.duration,
+            txHash,
+            isReferred: true,
+            level: Number(parsedLog[3]),
+            refId: Number(parsedLog[4]),
+            transactionStatus:
+              receipt.status === 1
+                ? TransactionStatusEnum.CONFIRMED
+                : TransactionStatusEnum.FAILED,
+          };
 
-        return formattedReferralLog;
-      });
+          return formattedReferralLog;
+        }),
+      );
 
+      console.log(refStakedLogs);
       await this.StakingModel.insertMany(refStakedLogs);
-      console.log('refStakedLogs', refStakedLogs);
     }
 
     console.log(stakedLogs.args);
+
+    const idToStake = await this.ethersService.icoContract.idToStake(
+      Number(stakedLogs.args[5]),
+    );
 
     const updateRecord = await this.StakingModel.findByIdAndUpdate(
       newTransaction._id,
       {
         stakeId: Number(stakedLogs.args[5]),
         walletAddress: stakedLogs.args[0],
-        amount: this.BigIntToNumber(stakedLogs.args[1]),
-        apr: Number(stakedLogs.args[2]) / 10,
-        poolType: Number(stakedLogs.args[3]),
+        amount: this.BigToNumber(idToStake[1]),
+        apr: Number(idToStake[2]) / 10,
+        poolType: Number(idToStake[3]),
         startTime: Number(stakedLogs.args[4]),
         stakeDuration: stakeDuration.duration,
         txHash,
@@ -355,14 +365,53 @@ export class TransactionService {
     }
   }
 
-  // private hasRun = false;
-  @Cron(CronExpression.EVERY_10_SECONDS)
+
+  private BigToNumber(value: BigInt): number {
+    const bigNumberValue = new BigNumber(value.toString());
+    return bigNumberValue.dividedBy(new BigNumber(10).pow(18)).toNumber();
+  }
+
+  async updateStakes() {
+    const stakes = await this.StakingModel.find({
+      transactionStatus: TransactionStatusEnum.CONFIRMED,
+    });
+
+    // const stake = await this.StakingModel.findOne({ stakeId: 23 });
+    // const idToStake = await this.ethersService.icoContract.idToStake(
+    //   Number(stake.stakeId),
+    // );
+    // stake.apr = Number(idToStake[2]) / 10;
+    // stake.amount = this.BigToNumber(idToStake[1]);
+    // stake.poolType = Number(idToStake[3]);
+    // await stake.save();
+
+    // console.log(this.BigToNumber(idToStake[1]));
+    // console.log(idToStake[1])
+    // console.log('updated');
+
+    stakes.map(async (stake) => {
+      const idToStake = await this.ethersService.icoContract.idToStake(
+        Number(stake.stakeId),
+      );
+      stake.apr = Number(idToStake[2]) / 10;
+      stake.amount = this.BigToNumber(idToStake[1]);
+      stake.poolType = Number(idToStake[3]);
+      stake.isReferred = Boolean(idToStake[5]);
+      stake.startTime = Number(idToStake[4]);
+      await stake.save();
+      console.log("updated")
+    });
+  }
+
+  private hasRun = false;
+  @Cron(CronExpression.EVERY_5_SECONDS)
   handleCron() {
-    // if (this.hasRun) {
-    //   return;
-    // }
-    // this.hasRun = true;
+    if (this.hasRun) {
+      return;
+    }
+    this.hasRun = true;
     this.syncPaymentReceived(999);
+    // this.updateStakes();
     // this.saveStakeTransaction(
     //   '0x8ef5aadb40deeeeb3226944c6e3061ab8d6a1352de1d06f8b8ed63381d9740fd',
     //   '0x50Ca1fde29D62292a112A72671E14a5d4f05580f',
