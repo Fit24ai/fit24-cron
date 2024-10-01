@@ -95,15 +95,15 @@ export class ContractService {
   }
 
   // private hasRun = false;
-  @Cron('0 * * * *')
-  async handleCron() {
-    // if (this.hasRun) {
-    //   return;
-    // }
-    // this.hasRun = true;
-    console.log('Hello Ethers');
-    await this.updateClaimTreasury();
-    await this.readOnly();
+  // @Cron('0 * * * *')
+  // async handleCron() {
+  //   // if (this.hasRun) {
+  //   //   return;
+  //   // }
+  //   // this.hasRun = true;
+  //   console.log('Hello Ethers');
+  //   await this.updateClaimTreasury();
+  //   await this.readOnly();
 
-  }
+  // }
 }

@@ -26,6 +26,6 @@ import { TransactionModule } from './transaction/transaction.module';
     StakingModule,
     TransactionModule,
   ],
-  providers: [ContractService, TransactionService],
+  providers: [ContractService],
 })
 export class AppModule {}
