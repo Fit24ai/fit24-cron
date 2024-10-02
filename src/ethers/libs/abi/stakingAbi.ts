@@ -1,9 +1,5 @@
 const stakingAbi = [
-  {
-    inputs: [{ internalType: 'address', name: 'fit24', type: 'address' }],
-    stateMutability: 'nonpayable',
-    type: 'constructor',
-  },
+  { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
   {
     anonymous: false,
     inputs: [
@@ -218,6 +214,23 @@ const stakingAbi = [
     type: 'function',
   },
   {
+    inputs: [
+      { internalType: 'address', name: 'user', type: 'address' },
+      { internalType: 'uint256', name: 'level', type: 'uint256' },
+    ],
+    name: 'activatePendingRefStake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'activeStakesForLevels',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
     inputs: [{ internalType: 'address', name: '', type: 'address' }],
     name: 'added',
     outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
@@ -261,6 +274,13 @@ const stakingAbi = [
   },
   {
     inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getEligibility',
+    outputs: [{ internalType: 'uint256', name: 'level', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
     name: 'getPendingAmountForDay',
     outputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
     stateMutability: 'view',
@@ -279,6 +299,13 @@ const stakingAbi = [
     outputs: [
       { internalType: 'uint256', name: 'totalStakes', type: 'uint256' },
     ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getUserTotalReferralReward',
+    outputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -349,6 +376,13 @@ const stakingAbi = [
   {
     inputs: [],
     name: 'owner',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'publicSaleContract',
     outputs: [{ internalType: 'address', name: '', type: 'address' }],
     stateMutability: 'view',
     type: 'function',
@@ -441,6 +475,13 @@ const stakingAbi = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'totalWithdrawnTokens',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
     name: 'transferOwnership',
     outputs: [],
@@ -511,6 +552,13 @@ const stakingAbi = [
   {
     inputs: [{ internalType: 'address', name: '', type: 'address' }],
     name: 'userTotalTokenStaked',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'userTotalTokenWithdrawn',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',

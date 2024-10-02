@@ -403,19 +403,19 @@ export class TransactionService {
     });
   }
 
-  private hasRun = false;
-  @Cron(CronExpression.EVERY_5_SECONDS)
-  handleCron() {
-    if (this.hasRun) {
-      return;
-    }
-    this.hasRun = true;
-    this.syncPaymentReceived(999);
+  // private hasRun = false;
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  // handleCron() {
+    // if (this.hasRun) {
+    //   return;
+    // }
+    // this.hasRun = true;
+    // this.syncPaymentReceived(999);
     // this.updateStakes();
     // this.saveStakeTransaction(
-    //   '0x8ef5aadb40deeeeb3226944c6e3061ab8d6a1352de1d06f8b8ed63381d9740fd',
+    //   '0xc7876bb3f8fd71944715029f016db5153930e46f51e64fd57508af67178ed29e',
     //   '0x50Ca1fde29D62292a112A72671E14a5d4f05580f',
     //   10,
     // );
-  }
+  // }
 }
