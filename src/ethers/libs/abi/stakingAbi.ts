@@ -1,9 +1,5 @@
 const stakingAbi = [
-  {
-    inputs: [{ internalType: 'address', name: 'fit24', type: 'address' }],
-    stateMutability: 'nonpayable',
-    type: 'constructor',
-  },
+  { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
   {
     anonymous: false,
     inputs: [
@@ -218,6 +214,23 @@ const stakingAbi = [
     type: 'function',
   },
   {
+    inputs: [
+      { internalType: 'address', name: 'user', type: 'address' },
+      { internalType: 'uint256', name: 'level', type: 'uint256' },
+    ],
+    name: 'activatePendingRefStake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'activeStakesForLevels',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
     inputs: [{ internalType: 'address', name: '', type: 'address' }],
     name: 'added',
     outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
@@ -253,9 +266,23 @@ const stakingAbi = [
     type: 'function',
   },
   {
+    inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    name: 'getAllReferredStakes',
+    outputs: [{ internalType: 'uint256[]', name: 'stakes', type: 'uint256[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'getAllUsers',
     outputs: [{ internalType: 'address[]', name: 'users', type: 'address[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getEligibility',
+    outputs: [{ internalType: 'uint256', name: 'level', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -284,6 +311,13 @@ const stakingAbi = [
   },
   {
     inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getUserTotalReferralReward',
+    outputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
     name: 'getUserTotalStakeReward',
     outputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
     stateMutability: 'view',
@@ -300,6 +334,7 @@ const stakingAbi = [
       { internalType: 'uint256', name: 'startTime', type: 'uint256' },
       { internalType: 'bool', name: 'isReferral', type: 'bool' },
       { internalType: 'bool', name: 'active', type: 'bool' },
+      { internalType: 'uint256', name: 'referredStakes', type: 'uint256' },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -355,6 +390,13 @@ const stakingAbi = [
   },
   {
     inputs: [],
+    name: 'publicSaleContract',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'referralContract',
     outputs: [{ internalType: 'address', name: '', type: 'address' }],
     stateMutability: 'view',
@@ -373,6 +415,13 @@ const stakingAbi = [
   {
     inputs: [],
     name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'time', type: 'uint256' }],
+    name: 'setLastClaimedTimestamp',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -436,6 +485,13 @@ const stakingAbi = [
   {
     inputs: [],
     name: 'totalStakedTokens',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalWithdrawnTokens',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -511,6 +567,13 @@ const stakingAbi = [
   {
     inputs: [{ internalType: 'address', name: '', type: 'address' }],
     name: 'userTotalTokenStaked',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'userTotalTokenWithdrawn',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',

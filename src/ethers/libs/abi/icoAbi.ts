@@ -1,9 +1,5 @@
 export const icoAbi = [
-  {
-    inputs: [{ internalType: 'address', name: 'fit24', type: 'address' }],
-    stateMutability: 'nonpayable',
-    type: 'constructor',
-  },
+  { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
   {
     anonymous: false,
     inputs: [
@@ -46,6 +42,56 @@ export const icoAbi = [
       },
     ],
     name: 'OwnershipTransferred',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'stakeId',
+        type: 'uint256',
+      },
+    ],
+    name: 'ReferralAprStopped',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'stakeId',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'level',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'refId',
+        type: 'uint256',
+      },
+    ],
+    name: 'ReferralStakeCreated',
     type: 'event',
   },
   {
@@ -168,6 +214,23 @@ export const icoAbi = [
     type: 'function',
   },
   {
+    inputs: [
+      { internalType: 'address', name: 'user', type: 'address' },
+      { internalType: 'uint256', name: 'level', type: 'uint256' },
+    ],
+    name: 'activatePendingRefStake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'activeStakesForLevels',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
     inputs: [{ internalType: 'address', name: '', type: 'address' }],
     name: 'added',
     outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
@@ -203,9 +266,23 @@ export const icoAbi = [
     type: 'function',
   },
   {
+    inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    name: 'getAllReferredStakes',
+    outputs: [{ internalType: 'uint256[]', name: 'stakes', type: 'uint256[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'getAllUsers',
     outputs: [{ internalType: 'address[]', name: 'users', type: 'address[]' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getEligibility',
+    outputs: [{ internalType: 'uint256', name: 'level', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
@@ -234,6 +311,13 @@ export const icoAbi = [
   },
   {
     inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
+    name: 'getUserTotalReferralReward',
+    outputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'user', type: 'address' }],
     name: 'getUserTotalStakeReward',
     outputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
     stateMutability: 'view',
@@ -248,7 +332,9 @@ export const icoAbi = [
       { internalType: 'uint256', name: 'apr', type: 'uint256' },
       { internalType: 'uint256', name: 'poolType', type: 'uint256' },
       { internalType: 'uint256', name: 'startTime', type: 'uint256' },
+      { internalType: 'bool', name: 'isReferral', type: 'bool' },
       { internalType: 'bool', name: 'active', type: 'bool' },
+      { internalType: 'uint256', name: 'referredStakes', type: 'uint256' },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -269,6 +355,27 @@ export const icoAbi = [
   },
   {
     inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    name: 'levelToAprCommision',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'user', type: 'address' },
+      { internalType: 'uint256', name: 'stakeAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'poolType', type: 'uint256' },
+      { internalType: 'uint256', name: '_apr', type: 'uint256' },
+      { internalType: 'uint256', name: 'start', type: 'uint256' },
+      { internalType: 'uint256', name: 'id', type: 'uint256' },
+    ],
+    name: 'manageReferral',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     name: 'minimumStakingAmount',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
@@ -283,7 +390,38 @@ export const icoAbi = [
   },
   {
     inputs: [],
+    name: 'publicSaleContract',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'referralContract',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: '', type: 'uint256' },
+      { internalType: 'uint256', name: '', type: 'uint256' },
+    ],
+    name: 'referredStakes',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
     name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'uint256', name: 'time', type: 'uint256' }],
+    name: 'setLastClaimedTimestamp',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -324,6 +462,13 @@ export const icoAbi = [
     type: 'function',
   },
   {
+    inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    name: 'stopReferalApr',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'tge',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
@@ -340,6 +485,13 @@ export const icoAbi = [
   {
     inputs: [],
     name: 'totalStakedTokens',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalWithdrawnTokens',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -363,6 +515,13 @@ export const icoAbi = [
     name: 'treasuryAmountClaimed',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'referral', type: 'address' }],
+    name: 'updateReferralContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -408,6 +567,13 @@ export const icoAbi = [
   {
     inputs: [{ internalType: 'address', name: '', type: 'address' }],
     name: 'userTotalTokenStaked',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'userTotalTokenWithdrawn',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
