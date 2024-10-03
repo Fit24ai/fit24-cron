@@ -53,14 +53,14 @@ export class TransactionService {
       toBlock: 'latest',
       topics: [process.env.PAYMENT_RECEIVED_TOPIC],
     });
-    // console.log(events);
+    console.log(events);
 
     // console.log(events);
     await Promise.all(
       events.map(async (event) => {
         const parsedEvent = this.ethersService.paymentInterface.parseLog(event);
 
-        // console.log(parsedEvent);
+        console.log(parsedEvent);
         const transaction = await this.Transaction.findOne({
           transactionHash: event.transactionHash,
           // distributionStatus: DistributionStatusEnum.PENDING,
@@ -75,6 +75,7 @@ export class TransactionService {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
+          if(!user) return
           if (
             transaction.distributionStatus === DistributionStatusEnum.PENDING
           ) {
@@ -94,6 +95,7 @@ export class TransactionService {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
+          if (!user) return;
           await this.redisService.set(
             `transaction:${event.transactionHash}-${ChainEnum.BINANCE}`,
             'PROCESSING',
@@ -152,6 +154,8 @@ export class TransactionService {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
+          if (!user) return;
+
           if (
             transaction.distributionStatus === DistributionStatusEnum.PENDING
           ) {
@@ -171,6 +175,7 @@ export class TransactionService {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
+          if(!user) return
           await this.redisService.set(
             `transaction:${event.transactionHash}-${ChainEnum.ETHEREUM}`,
             'PROCESSING',
