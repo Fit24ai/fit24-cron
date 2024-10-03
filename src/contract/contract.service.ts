@@ -41,7 +41,7 @@ export class ContractService {
       const poolType = formatUnits(idToStake[3], 0);
       const stakeDuration = await this.icoContract.stakeDuration(poolType);
       const blockTimestamp = BigInt(
-        (await ether.provider.getBlock('latest')).timestamp,
+        (await ether.blokfitProvider.getBlock('latest')).timestamp,
       );
       const stakeEndTime = stakeDuration + idToStake[4];
 
@@ -95,15 +95,14 @@ export class ContractService {
   }
 
   // private hasRun = false;
-  // @Cron('0 * * * *')
-  // async handleCron() {
-  //   // if (this.hasRun) {
-  //   //   return;
-  //   // }
-  //   // this.hasRun = true;
-  //   console.log('Hello Ethers');
-  //   await this.updateClaimTreasury();
-  //   await this.readOnly();
-
-  // }
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleCron() {
+    // if (this.hasRun) {
+    //   return;
+    // }
+    // this.hasRun = true;
+    console.log('Hello Ethers');
+    await this.updateClaimTreasury();
+    await this.readOnly();
+  }
 }

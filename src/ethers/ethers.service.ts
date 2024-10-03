@@ -3,7 +3,7 @@ import { Contract, Interface, JsonRpcProvider, Wallet } from 'ethers';
 import {
   BuyContract,
   IcoContract,
-  paymentContractAddress,
+  binancePaymentContractAddress,
   StakingContract,
 } from './libs/contract';
 import { icoAbi } from './libs/abi/icoAbi';
@@ -16,14 +16,28 @@ config();
 
 @Injectable()
 export class EthersService {
-  public provider = new JsonRpcProvider(
-    'https://bsc-testnet-rpc.publicnode.com',
+  // public binanceProvider = new JsonRpcProvider(
+  //   'https://bsc-testnet-rpc.publicnode.com',
+  // );
+  // public ethereumProvider = new JsonRpcProvider(
+  //   'https://bsc-testnet-rpc.publicnode.com',
+  // );
+  public binanceProvider = new JsonRpcProvider(
+    process.env.BINANCE_RPC_PROVIDER,
   );
 
+  public ethereumProvider = new JsonRpcProvider(
+    process.env.ETHEREUM_RPC_PROVIDER,
+  );
+  public blokfitProvider = new JsonRpcProvider(
+    process.env.BLOKFIT_RPC_PROVIDER,
+  );
+  
 
-  private readonly signer = new Wallet(process.env.PRIVATE_KEY, this.provider);
+  // private readonly signer = new Wallet(process.env.PRIVATE_KEY, this.binanceProvider);
+  private readonly signer = new Wallet(process.env.PRIVATE_KEY, this.blokfitProvider);
 
-  public icoContract = new Contract(StakingContract, stakingAbi, this.provider);
+  public icoContract = new Contract(StakingContract, stakingAbi, this.blokfitProvider);
   public signedIcoContract = new Contract(
     StakingContract,
     stakingAbi,
@@ -36,14 +50,14 @@ export class EthersService {
   );
 
   public paymentContract = new Contract(
-    paymentContractAddress,
+    binancePaymentContractAddress,
     paymentAbi,
-    this.provider,
+    this.binanceProvider,
   );
   public buyContract = new Contract(
     BuyContract,
     buyAbi,
-    this.provider,
+    this.binanceProvider,
   );
 
   public icoInterface = new Interface(icoAbi);
@@ -54,13 +68,10 @@ export class EthersService {
 
   public paymentInterface = new Interface(paymentAbi);
 
-  public readonly binanceProvider = new JsonRpcProvider(
-    process.env.BINANCE_PRC_PROVIDER,
-  );
 
   public binanceStakingContract = new Contract(
     StakingContract,
     stakingAbi,
-    this.provider,
+    this.binanceProvider,
   );
 }

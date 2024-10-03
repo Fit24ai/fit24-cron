@@ -1,5 +1,9 @@
 export const buyAbi = [
-  { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
+  {
+    inputs: [],
+    stateMutability: 'nonpayable',
+    type: 'constructor',
+  },
   {
     anonymous: false,
     inputs: [
@@ -183,25 +187,59 @@ export const buyAbi = [
     type: 'event',
   },
   {
-    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
     name: 'added',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'amountRaised',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [
-      { internalType: 'uint256', name: 'amount', type: 'uint256' },
-      { internalType: 'address', name: 'user', type: 'address' },
-      { internalType: 'uint256', name: 'poolType', type: 'uint256' },
-      { internalType: 'uint256', name: '_apr', type: 'uint256' },
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'poolType',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '_apr',
+        type: 'uint256',
+      },
     ],
     name: 'buyToken',
     outputs: [],
@@ -209,7 +247,13 @@ export const buyAbi = [
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
     name: 'buyTokensAdmin',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -217,7 +261,11 @@ export const buyAbi = [
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '_phase1Price', type: 'uint256' },
+      {
+        internalType: 'uint256',
+        name: '_phase1Price',
+        type: 'uint256',
+      },
     ],
     name: 'editPrice',
     outputs: [],
@@ -227,39 +275,76 @@ export const buyAbi = [
   {
     inputs: [],
     name: 'fit24',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [
-      { internalType: 'bytes32', name: 'hash', type: 'bytes32' },
-      { internalType: 'bytes', name: 'signature', type: 'bytes' },
+    inputs: [],
+    name: 'getAllUsers',
+    outputs: [
+      {
+        internalType: 'address[]',
+        name: 'users',
+        type: 'address[]',
+      },
     ],
-    name: 'getAddress',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
-    stateMutability: 'pure',
+    stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'getStage',
-    outputs: [{ internalType: 'uint256', name: 'stage', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'stage',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'pure',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'uint256', name: 'stage', type: 'uint256' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'stage',
+        type: 'uint256',
+      },
+    ],
     name: 'getStagePrice',
-    outputs: [{ internalType: 'uint256', name: 'price', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'price',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
     name: 'getTokensForAmount',
     outputs: [
-      { internalType: 'uint256', name: 'tokenAmount', type: 'uint256' },
+      {
+        internalType: 'uint256',
+        name: 'tokenAmount',
+        type: 'uint256',
+      },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -267,58 +352,71 @@ export const buyAbi = [
   {
     inputs: [],
     name: 'getTotalSales',
-    outputs: [{ internalType: 'uint256', name: 'sales', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'sales',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [
-      { internalType: 'string', name: 'nonce', type: 'string' },
-      { internalType: 'address', name: 'receiver', type: 'address' },
-      { internalType: 'uint256', name: 'amount', type: 'uint256' },
-      { internalType: 'uint256', name: 'poolType', type: 'uint256' },
-      { internalType: 'uint256', name: '_apr', type: 'uint256' },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
     ],
-    name: 'hashTransaction',
-    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
-    stateMutability: 'pure',
-    type: 'function',
-  },
-  {
-    inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     name: 'investors',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { internalType: 'bytes32', name: 'hash', type: 'bytes32' },
-      { internalType: 'bytes', name: 'signature', type: 'bytes' },
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
     ],
-    name: 'matchSigner',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'owner',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'phase1Price',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'phase1Supply',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
@@ -331,48 +429,95 @@ export const buyAbi = [
   },
   {
     inputs: [],
-    name: 'signer',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
     name: 'stakingContract',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [],
     name: 'tokensSold',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
     name: 'totalTokenBoughtUser',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     name: 'totalTokenSoldForPhase',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'address', name: '', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
     name: 'totalUsdInvestedByUser',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
     name: 'transferOwnership',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -380,8 +525,16 @@ export const buyAbi = [
   },
   {
     inputs: [
-      { internalType: 'address', name: '_stakingContract', type: 'address' },
-      { internalType: 'address', name: 'token', type: 'address' },
+      {
+        internalType: 'address',
+        name: '_stakingContract',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'token',
+        type: 'address',
+      },
     ],
     name: 'updateContracts',
     outputs: [],
@@ -390,7 +543,11 @@ export const buyAbi = [
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '_phase1Supply', type: 'uint256' },
+      {
+        internalType: 'uint256',
+        name: '_phase1Supply',
+        type: 'uint256',
+      },
     ],
     name: 'updateSupply',
     outputs: [],
@@ -398,21 +555,26 @@ export const buyAbi = [
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'address', name: 'token', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'token',
+        type: 'address',
+      },
+    ],
     name: 'updatefit24TokenAddress',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'string', name: '', type: 'string' }],
-    name: 'usedNonce',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ internalType: 'address', name: 'wallet', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'wallet',
+        type: 'address',
+      },
+    ],
     name: 'withdrawFunds',
     outputs: [],
     stateMutability: 'nonpayable',
@@ -420,13 +582,24 @@ export const buyAbi = [
   },
   {
     inputs: [
-      { internalType: 'contract IERC20', name: 'token', type: 'address' },
-      { internalType: 'address', name: 'wallet', type: 'address' },
+      {
+        internalType: 'contract IERC20',
+        name: 'token',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'wallet',
+        type: 'address',
+      },
     ],
     name: 'withdrawTokens',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
-  { stateMutability: 'payable', type: 'receive' },
+  {
+    stateMutability: 'payable',
+    type: 'receive',
+  },
 ];

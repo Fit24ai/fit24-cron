@@ -1,7 +1,11 @@
+import { ChainEnum } from './../types/transaction';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EthersService } from 'src/ethers/ethers.service';
-import { paymentContractAddress } from 'src/ethers/libs/contract';
+import {
+  binancePaymentContractAddress,
+  ethereumPaymentContractAddress,
+} from 'src/ethers/libs/contract';
 import { StakingTransaction } from './schema/stakingTransaction.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -11,7 +15,6 @@ import { v4 } from 'uuid';
 import { formatUnits, parseEther, solidityPackedKeccak256 } from 'ethers';
 
 import {
-  ChainEnum,
   DistributionStatusEnum,
   TransactionStatusEnum,
 } from 'src/types/transaction';
@@ -21,6 +24,7 @@ import { ConfigService } from '@nestjs/config';
 import { Staking } from 'src/staking/schema/staking.schema';
 import { StakeDuration } from 'src/staking/schema/stakeDuration.schema';
 import { IRefStakeLogs } from './types/logs';
+import { RedisClientType } from 'redis';
 
 // const ether = new EthersService();
 
@@ -38,32 +42,72 @@ export class TransactionService {
     private readonly configService: ConfigService,
     @Inject()
     private readonly ethersService: EthersService,
+    @Inject('REDIS_SERVICE')
+    private readonly redisService: RedisClientType,
   ) {}
   async syncPaymentReceived(block: number) {
-    const fromBlock = await this.ethersService.provider.getBlockNumber();
-    const events = await this.ethersService.provider.getLogs({
-      address: paymentContractAddress,
+    const fromBlock = await this.ethersService.binanceProvider.getBlockNumber();
+    const events = await this.ethersService.binanceProvider.getLogs({
+      address: binancePaymentContractAddress,
       fromBlock: fromBlock - block,
       toBlock: 'latest',
       topics: [process.env.PAYMENT_RECEIVED_TOPIC],
     });
+    // console.log(events);
 
     // console.log(events);
-    events.map(async (event) => {
-      const parsedEvent = this.ethersService.paymentInterface.parseLog(event);
-      // console.log(parsedEvent);
-      const transaction = await this.Transaction.findOne({
-        transactionHash: event.transactionHash,
-        // distributionStatus: DistributionStatusEnum.PENDING,
-      });
+    await Promise.all(
+      events.map(async (event) => {
+        const parsedEvent = this.ethersService.paymentInterface.parseLog(event);
 
-      if (transaction) {
-        const user = await this.User.findOne({
-          walletAddress: parsedEvent.args[2],
+        // console.log(parsedEvent);
+        const transaction = await this.Transaction.findOne({
+          transactionHash: event.transactionHash,
+          // distributionStatus: DistributionStatusEnum.PENDING,
         });
-        if (transaction.distributionStatus === DistributionStatusEnum.PENDING) {
-          transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
-          await transaction.save();
+
+        const cache = await this.redisService.get(
+          `transaction:${event.transactionHash}-${ChainEnum.BINANCE}`,
+        );
+        if (cache) return;
+
+        if (transaction) {
+          const user = await this.User.findOne({
+            walletAddress: parsedEvent.args[2],
+          });
+          if (
+            transaction.distributionStatus === DistributionStatusEnum.PENDING
+          ) {
+            transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
+            await transaction.save();
+
+            await this.buyToken(
+              transaction,
+              parsedEvent.args[0],
+              user.walletAddress,
+              parsedEvent.args[1],
+              Number(parsedEvent.args[3]),
+              Number(parsedEvent.args[4]),
+            );
+          }
+        } else {
+          const user = await this.User.findOne({
+            walletAddress: parsedEvent.args[2],
+          });
+          await this.redisService.set(
+            `transaction:${event.transactionHash}-${ChainEnum.BINANCE}`,
+            'PROCESSING',
+            {
+              EX: 30,
+            },
+          );
+          const transaction = new this.Transaction({
+            transactionHash: event.transactionHash,
+            chain: ChainEnum.BINANCE,
+            distributionStatus: DistributionStatusEnum.PROCESSING,
+            user: user,
+          });
+          const newTransaction = await transaction.save();
 
           await this.buyToken(
             transaction,
@@ -74,28 +118,85 @@ export class TransactionService {
             Number(parsedEvent.args[4]),
           );
         }
-      } else {
-        const user = await this.User.findOne({
-          walletAddress: parsedEvent.args[2],
-        });
-        const transaction = new this.Transaction({
-          transactionHash: event.transactionHash,
-          chain: ChainEnum.BINANCE,
-          distributionStatus: DistributionStatusEnum.PROCESSING,
-          user: user,
-        });
-        const newTransaction = await transaction.save();
-
-        await this.buyToken(
-          transaction,
-          parsedEvent.args[0],
-          user.walletAddress,
-          parsedEvent.args[1],
-          Number(parsedEvent.args[3]),
-          Number(parsedEvent.args[4]),
-        );
-      }
+      }),
+    );
+  }
+  async syncEthereumPaymentReceived(block: number) {
+    const fromBlock =
+      await this.ethersService.ethereumProvider.getBlockNumber();
+    const events = await this.ethersService.ethereumProvider.getLogs({
+      address: ethereumPaymentContractAddress,
+      fromBlock: fromBlock - block,
+      toBlock: 'latest',
+      topics: [process.env.PAYMENT_RECEIVED_TOPIC],
     });
+    console.log(events);
+
+    // console.log(events);
+    await Promise.all(
+      events.map(async (event) => {
+        const parsedEvent = this.ethersService.paymentInterface.parseLog(event);
+
+        // console.log(parsedEvent);
+        const transaction = await this.Transaction.findOne({
+          transactionHash: event.transactionHash,
+          // distributionStatus: DistributionStatusEnum.PENDING,
+        });
+
+        const cache = await this.redisService.get(
+          `transaction:${event.transactionHash}-${ChainEnum.ETHEREUM}`,
+        );
+        if (cache) return;
+
+        if (transaction) {
+          const user = await this.User.findOne({
+            walletAddress: parsedEvent.args[2],
+          });
+          if (
+            transaction.distributionStatus === DistributionStatusEnum.PENDING
+          ) {
+            transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
+            await transaction.save();
+
+            await this.buyToken(
+              transaction,
+              parsedEvent.args[0],
+              user.walletAddress,
+              parsedEvent.args[1],
+              Number(parsedEvent.args[3]),
+              Number(parsedEvent.args[4]),
+            );
+          }
+        } else {
+          const user = await this.User.findOne({
+            walletAddress: parsedEvent.args[2],
+          });
+          await this.redisService.set(
+            `transaction:${event.transactionHash}-${ChainEnum.ETHEREUM}`,
+            'PROCESSING',
+            {
+              EX: 30,
+            },
+          );
+          const transaction = new this.Transaction({
+            transactionHash: event.transactionHash,
+            chain: ChainEnum.ETHEREUM,
+            distributionStatus: DistributionStatusEnum.PROCESSING,
+            user: user,
+          });
+          const newTransaction = await transaction.save();
+
+          await this.buyToken(
+            transaction,
+            parsedEvent.args[0],
+            user.walletAddress,
+            parsedEvent.args[1],
+            Number(parsedEvent.args[3]),
+            Number(parsedEvent.args[4]),
+          );
+        }
+      }),
+    );
   }
 
   async buyToken(
@@ -129,11 +230,10 @@ export class TransactionService {
     try {
       const { txHash } = await this.transferTokens(
         walletAddress,
-
         BigAmount,
-        // transactionHash: existingTransaction.transactionHash,
         poolType,
         apr,
+        existingTransaction.chain,
       );
 
       existingTransaction.poolType = poolType;
@@ -147,9 +247,15 @@ export class TransactionService {
         walletAddress,
         Number(poolType),
       );
+      await this.redisService.del(
+        `transaction:${existingTransaction.transactionHash}-${existingTransaction.chain}`,
+      );
     } catch (error) {
       console.log('error');
       existingTransaction.distributionStatus = DistributionStatusEnum.PENDING;
+      await this.redisService.del(
+        `transaction:${existingTransaction.transactionHash}-${existingTransaction.chain}`,
+      );
     }
     await existingTransaction.save();
   }
@@ -169,7 +275,7 @@ export class TransactionService {
       stakeDuration: stakeDuration.duration,
     });
     const receipt =
-      await this.ethersService.provider.getTransactionReceipt(txHash);
+      await this.ethersService.blokfitProvider.getTransactionReceipt(txHash);
     console.log('Logs Length:', receipt.logs.length);
 
     const stakedLogs2 = receipt.logs.filter(
@@ -285,6 +391,7 @@ export class TransactionService {
     // transactionHash: string,
     poolType: number,
     apr: number,
+    chain: ChainEnum,
   ) {
     try {
       console.log(
@@ -304,11 +411,16 @@ export class TransactionService {
       console.log('tx', tx.hash);
       await tx.wait();
 
-      const receipt = await this.ethersService.provider.getTransactionReceipt(
-        tx.hash,
-      );
-      // const parsedLog = this.ethersService.icoInterface.parseLog(receipt?.logs[2]!);
       return { txHash: tx.hash };
+      // if (chain === ChainEnum.ETHEREUM) {
+      //   const receipt =
+      //     await this.ethersService.ethereumProvider.getTransactionReceipt(
+      //       tx.hash,
+      //     );
+      //   return { txHash: tx.hash };
+      // } else {
+
+      // }
     } catch (error) {
       console.log({ error });
       throw error;
@@ -325,14 +437,14 @@ export class TransactionService {
     console.log('amount', amount);
     switch (chain) {
       case ChainEnum.ETHEREUM:
-      // const providerReceiptEth =
-      //   await this.ethersService.ethereumProvider.getTransactionReceipt(
-      //     transactionHash,
-      //   );
-      // const EthLogs = this.ethersService.paymentInterface.parseLog(
-      //   providerReceiptEth?.logs[providerReceiptEth.logs.length - 1]!,
-      // );
-      // return this.verifyTransactionConditions(EthLogs, amount, user);
+        const providerReceiptEth =
+          await this.ethersService.ethereumProvider.getTransactionReceipt(
+            transactionHash,
+          );
+        const EthLogs = this.ethersService.paymentInterface.parseLog(
+          providerReceiptEth?.logs[providerReceiptEth.logs.length - 1]!,
+        );
+        return this.verifyTransactionConditions(EthLogs, amount, user);
 
       case ChainEnum.BINANCE:
         const providerReceiptBinance =
@@ -364,7 +476,6 @@ export class TransactionService {
       return false;
     }
   }
-
 
   private BigToNumber(value: BigInt): number {
     const bigNumberValue = new BigNumber(value.toString());
@@ -399,7 +510,7 @@ export class TransactionService {
       stake.isReferred = Boolean(idToStake[5]);
       stake.startTime = Number(idToStake[4]);
       await stake.save();
-      console.log("updated")
+      console.log('updated');
     });
   }
 

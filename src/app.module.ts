@@ -8,6 +8,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { StakingModule } from './staking/staking.module';
 import { TransactionService } from './transaction/transaction.service';
 import { TransactionModule } from './transaction/transaction.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TransactionModule } from './transaction/transaction.module';
     ScheduleModule.forRoot(),
     StakingModule,
     TransactionModule,
+    RedisModule,
   ],
   providers: [ContractService],
 })

@@ -24,132 +24,132 @@ export class StakingService {
     return Number(value) / Math.pow(10, 18);
   }
 
-  async syncClaimedRewardForStake(block: number) {
-    console.log("yash")
-    const fromBlock = await this.ethersService.provider.getBlockNumber();
-    const events = await this.ethersService.provider.getLogs({
-      address: StakingContract,
-      fromBlock: fromBlock - block,
-      toBlock: 'latest',
-      topics: [process.env.REWARD_CLAIMED_TOPIC],
-    });
+  // async syncClaimedRewardForStake(block: number) {
+  //   console.log("yash")
+  //   const fromBlock = await this.ethersService.provider.getBlockNumber();
+  //   const events = await this.ethersService.provider.getLogs({
+  //     address: StakingContract,
+  //     fromBlock: fromBlock - block,
+  //     toBlock: 'latest',
+  //     topics: [process.env.REWARD_CLAIMED_TOPIC],
+  //   });
 
-    console.log(events)
+  //   console.log(events)
 
-    events.map(async (event) => {
-      const parsedEvent = this.ethersService.stakingInterface.parseLog(event);
-      const isExist = await this.claimedRewardForStakeModel.findOne({
-        txHash: { $regex: event.transactionHash, $options: 'i' },
-        stakeId: Number(parsedEvent.args[0]),
-        walletAddress: { $regex: parsedEvent.args[1], $options: 'i' },
-      });
-      console.log(isExist)
-      if (isExist) {
-        return;
-      }
+  //   events.map(async (event) => {
+  //     const parsedEvent = this.ethersService.stakingInterface.parseLog(event);
+  //     const isExist = await this.claimedRewardForStakeModel.findOne({
+  //       txHash: { $regex: event.transactionHash, $options: 'i' },
+  //       stakeId: Number(parsedEvent.args[0]),
+  //       walletAddress: { $regex: parsedEvent.args[1], $options: 'i' },
+  //     });
+  //     console.log(isExist)
+  //     if (isExist) {
+  //       return;
+  //     }
 
-      const formattedClaimedLog = {
-        stakeId: Number(parsedEvent[0]),
-        walletAddress: parsedEvent[1],
-        amount: this.BigIntToNumber(parsedEvent[2]),
-        timestamp: Number(parsedEvent[3]),
-        txHash: event.transactionHash,
-      };
-      console.log(formattedClaimedLog);
-      console.log('formattedClaimedLog');
-      await this.claimedRewardForStakeModel.create(formattedClaimedLog);
-    });
-  }
+  //     const formattedClaimedLog = {
+  //       stakeId: Number(parsedEvent[0]),
+  //       walletAddress: parsedEvent[1],
+  //       amount: this.BigIntToNumber(parsedEvent[2]),
+  //       timestamp: Number(parsedEvent[3]),
+  //       txHash: event.transactionHash,
+  //     };
+  //     console.log(formattedClaimedLog);
+  //     console.log('formattedClaimedLog');
+  //     await this.claimedRewardForStakeModel.create(formattedClaimedLog);
+  //   });
+  // }
 
-  async syncReferralStake(block: number) {
-    console.log("yash1")
-    const fromBlock = await this.ethersService.provider.getBlockNumber();
-    const events = await this.ethersService.provider.getLogs({
-      address: StakingContract,
-      fromBlock: fromBlock - block,
-      toBlock: 'latest',
-      topics: [process.env.STAKED_TOPIC],
-    });
-    events.map(async (event) => {
-      const parsedEvent = this.ethersService.stakingInterface.parseLog(event);
-      const isExist = await this.StakingModel.findOne({
-        txHash: { $regex: event.transactionHash, $options: 'i' },
-        stakeId: Number(parsedEvent.args[5]),
-        walletAddress: { $regex: parsedEvent.args[0], $options: 'i' },
-      });
+  // async syncReferralStake(block: number) {
+  //   console.log("yash1")
+  //   const fromBlock = await this.ethersService.provider.getBlockNumber();
+  //   const events = await this.ethersService.provider.getLogs({
+  //     address: StakingContract,
+  //     fromBlock: fromBlock - block,
+  //     toBlock: 'latest',
+  //     topics: [process.env.STAKED_TOPIC],
+  //   });
+  //   events.map(async (event) => {
+  //     const parsedEvent = this.ethersService.stakingInterface.parseLog(event);
+  //     const isExist = await this.StakingModel.findOne({
+  //       txHash: { $regex: event.transactionHash, $options: 'i' },
+  //       stakeId: Number(parsedEvent.args[5]),
+  //       walletAddress: { $regex: parsedEvent.args[0], $options: 'i' },
+  //     });
 
-      if (isExist) {
-        return;
-      }
+  //     if (isExist) {
+  //       return;
+  //     }
 
-      const receipt = await this.ethersService.provider.getTransactionReceipt(
-        event.transactionHash,
-      );
+  //     const receipt = await this.ethersService.provider.getTransactionReceipt(
+  //       event.transactionHash,
+  //     );
 
-      const stakedLogs: LogDescription =
-        this.ethersService.stakingInterface.parseLog(
-          receipt?.logs[receipt.logs.length - 1],
-        );
+  //     const stakedLogs: LogDescription =
+  //       this.ethersService.stakingInterface.parseLog(
+  //         receipt?.logs[receipt.logs.length - 1],
+  //       );
 
-      const filteredLogs = receipt.logs.filter(
-        (log) => log.topics[0] === process.env.REFERRAL_TOPIC,
-      );
+  //     const filteredLogs = receipt.logs.filter(
+  //       (log) => log.topics[0] === process.env.REFERRAL_TOPIC,
+  //     );
 
-      const stakeDuration = await this.StakeDurationModel.findOne({
-        poolType: Number(stakedLogs.args[3]),
-      });
+  //     const stakeDuration = await this.StakeDurationModel.findOne({
+  //       poolType: Number(stakedLogs.args[3]),
+  //     });
 
-      if (filteredLogs.length > 0) {
-        const refStakedLogs = filteredLogs.map((log) => {
-          const parsedLog =
-            this.ethersService.stakingInterface.parseLog(log).args;
+  //     if (filteredLogs.length > 0) {
+  //       const refStakedLogs = filteredLogs.map((log) => {
+  //         const parsedLog =
+  //           this.ethersService.stakingInterface.parseLog(log).args;
 
-          const formattedReferralLog = {
-            stakeId: Number(parsedLog[2]),
-            walletAddress: parsedLog[0],
-            amount: this.BigIntToNumber(parsedLog[1]),
-            apr: Number(stakedLogs.args[2]) / 10,
-            poolType: Number(stakedLogs.args[3]),
-            startTime: Number(stakedLogs.args[4]),
-            stakeDuration: stakeDuration.duration,
-            txHash: event.transactionHash,
-            isReferred: true,
-            level: Number(parsedLog[3]),
-            refId: Number(parsedLog[4]),
-          };
+  //         const formattedReferralLog = {
+  //           stakeId: Number(parsedLog[2]),
+  //           walletAddress: parsedLog[0],
+  //           amount: this.BigIntToNumber(parsedLog[1]),
+  //           apr: Number(stakedLogs.args[2]) / 10,
+  //           poolType: Number(stakedLogs.args[3]),
+  //           startTime: Number(stakedLogs.args[4]),
+  //           stakeDuration: stakeDuration.duration,
+  //           txHash: event.transactionHash,
+  //           isReferred: true,
+  //           level: Number(parsedLog[3]),
+  //           refId: Number(parsedLog[4]),
+  //         };
 
-          return formattedReferralLog;
-        });
-        console.log('refStakedLogs');
-        console.log(refStakedLogs);
+  //         return formattedReferralLog;
+  //       });
+  //       console.log('refStakedLogs');
+  //       console.log(refStakedLogs);
 
-        await this.StakingModel.insertMany(refStakedLogs);
-      }
-      await this.StakingModel.create({
-        stakeId: Number(stakedLogs.args[5]),
-        walletAddress: stakedLogs.args[0],
-        amount: this.BigIntToNumber(stakedLogs.args[1]),
-        apr: Number(stakedLogs.args[2]) / 10,
-        poolType: Number(stakedLogs.args[3]),
-        startTime: Number(stakedLogs.args[4]),
-        stakeDuration: stakeDuration.duration,
-        txHash: event.transactionHash,
-        isReferred: false,
-      });
-      console.log('StakingModel.create');
-      console.log(
-        Number(stakedLogs.args[5]),
-        stakedLogs.args[0],
-        this.BigIntToNumber(stakedLogs.args[1]),
-        Number(stakedLogs.args[2]) / 10,
-        Number(stakedLogs.args[3]),
-        Number(stakedLogs.args[4]),
-        stakeDuration.duration,
-        event.transactionHash,
-        false,
-      );
-    });
-  }
+  //       await this.StakingModel.insertMany(refStakedLogs);
+  //     }
+  //     await this.StakingModel.create({
+  //       stakeId: Number(stakedLogs.args[5]),
+  //       walletAddress: stakedLogs.args[0],
+  //       amount: this.BigIntToNumber(stakedLogs.args[1]),
+  //       apr: Number(stakedLogs.args[2]) / 10,
+  //       poolType: Number(stakedLogs.args[3]),
+  //       startTime: Number(stakedLogs.args[4]),
+  //       stakeDuration: stakeDuration.duration,
+  //       txHash: event.transactionHash,
+  //       isReferred: false,
+  //     });
+  //     console.log('StakingModel.create');
+  //     console.log(
+  //       Number(stakedLogs.args[5]),
+  //       stakedLogs.args[0],
+  //       this.BigIntToNumber(stakedLogs.args[1]),
+  //       Number(stakedLogs.args[2]) / 10,
+  //       Number(stakedLogs.args[3]),
+  //       Number(stakedLogs.args[4]),
+  //       stakeDuration.duration,
+  //       event.transactionHash,
+  //       false,
+  //     );
+  //   });
+  // }
 
   // private hasRun = false;
   // @Cron(CronExpression.EVERY_10_SECONDS)
