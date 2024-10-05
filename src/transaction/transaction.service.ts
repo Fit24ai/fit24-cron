@@ -1,4 +1,4 @@
-import { ChainEnum } from './../types/transaction';
+import { ChainEnum, StakingStatus } from './../types/transaction';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EthersService } from 'src/ethers/ethers.service';
@@ -75,9 +75,10 @@ export class TransactionService {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
-          if(!user) return
+          if (!user) return;
           if (
-            transaction.distributionStatus === DistributionStatusEnum.PENDING
+            transaction.distributionStatus === DistributionStatusEnum.PENDING ||
+            transaction.distributionStatus === DistributionStatusEnum.FAILED
           ) {
             transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
             await transaction.save();
@@ -90,6 +91,20 @@ export class TransactionService {
               Number(parsedEvent.args[3]),
               Number(parsedEvent.args[4]),
             );
+          } else if (transaction.stakingStatus === StakingStatus.FAILED) {
+            try {
+              await this.saveStakeTransaction(
+                transaction.distributionHash,
+                user.walletAddress,
+                Number(transaction.poolType),
+              );
+              transaction.stakingStatus = StakingStatus.STAKED;
+              await transaction.save();
+            } catch (error) {
+              console.log(error);
+              transaction.stakingStatus = StakingStatus.FAILED;
+              await transaction.save();
+            }
           }
         } else {
           const user = await this.User.findOne({
@@ -157,7 +172,8 @@ export class TransactionService {
           if (!user) return;
 
           if (
-            transaction.distributionStatus === DistributionStatusEnum.PENDING
+            transaction.distributionStatus === DistributionStatusEnum.PENDING ||
+            transaction.distributionStatus === DistributionStatusEnum.FAILED
           ) {
             transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
             await transaction.save();
@@ -170,12 +186,26 @@ export class TransactionService {
               Number(parsedEvent.args[3]),
               Number(parsedEvent.args[4]),
             );
+          } else if (transaction.stakingStatus === StakingStatus.FAILED) {
+            try {
+              await this.saveStakeTransaction(
+                transaction.distributionHash,
+                user.walletAddress,
+                Number(transaction.poolType),
+              );
+              transaction.stakingStatus = StakingStatus.STAKED;
+              await transaction.save();
+            } catch (error) {
+              console.log(error);
+              transaction.stakingStatus = StakingStatus.FAILED;
+              await transaction.save();
+            }
           }
         } else {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
-          if(!user) return
+          if (!user) return;
           await this.redisService.set(
             `transaction:${event.transactionHash}-${ChainEnum.ETHEREUM}`,
             'PROCESSING',
@@ -247,22 +277,43 @@ export class TransactionService {
       existingTransaction.distributionStatus =
         DistributionStatusEnum.DISTRIBUTED;
       existingTransaction.tokenAmount = BigAmount.toString();
-      await this.saveStakeTransaction(
-        existingTransaction.distributionHash,
-        walletAddress,
-        Number(poolType),
-      );
+      await existingTransaction.save();
+      // await this.saveStakeTransaction(
+      //   existingTransaction.distributionHash,
+      //   walletAddress,
+      //   Number(poolType),
+      // );
       await this.redisService.del(
         `transaction:${existingTransaction.transactionHash}-${existingTransaction.chain}`,
       );
     } catch (error) {
       console.log('error');
-      existingTransaction.distributionStatus = DistributionStatusEnum.PENDING;
+      existingTransaction.distributionStatus = DistributionStatusEnum.FAILED;
+      await existingTransaction.save();
       await this.redisService.del(
         `transaction:${existingTransaction.transactionHash}-${existingTransaction.chain}`,
       );
     }
-    await existingTransaction.save();
+
+    if (
+      existingTransaction.distributionStatus ===
+      DistributionStatusEnum.DISTRIBUTED
+    ) {
+      try {
+        await this.saveStakeTransaction(
+          existingTransaction.distributionHash,
+          walletAddress,
+          Number(poolType),
+        );
+        existingTransaction.stakingStatus = StakingStatus.STAKED;
+        await existingTransaction.save();
+      } catch (error) {
+        console.log(error);
+        existingTransaction.stakingStatus = StakingStatus.FAILED;
+        await existingTransaction.save();
+      }
+    }
+    // await existingTransaction.save();
   }
 
   async saveStakeTransaction(
@@ -527,10 +578,11 @@ export class TransactionService {
     // }
     // this.hasRun = true;
     this.syncPaymentReceived(999);
+    this.syncEthereumPaymentReceived(999);
     // this.updateStakes();
     // this.saveStakeTransaction(
-    //   '0xc7876bb3f8fd71944715029f016db5153930e46f51e64fd57508af67178ed29e',
-    //   '0x50Ca1fde29D62292a112A72671E14a5d4f05580f',
+    //   '0x0251abb6b4a6619a45b4594394721e93e8ae1ff737b483b34da07e04d7e2f997',
+    //   '0x87668Df194F50BEa46F021A09EE2B361eEBA3617',
     //   10,
     // );
   }

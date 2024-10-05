@@ -8,6 +8,31 @@ const stakingAbi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'timestamp',
+        type: 'uint256',
+      },
+    ],
+    name: 'DailyRewardClaimed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: 'address',
         name: 'previousOwner',
@@ -28,6 +53,19 @@ const stakingAbi = [
     inputs: [
       {
         indexed: false,
+        internalType: 'uint256',
+        name: 'stakeId',
+        type: 'uint256',
+      },
+    ],
+    name: 'ReferralAprStopped',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: 'address',
         name: 'user',
         type: 'address',
@@ -35,7 +73,118 @@ const stakingAbi = [
       {
         indexed: false,
         internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'stakeId',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
         name: 'level',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'refId',
+        type: 'uint256',
+      },
+    ],
+    name: 'ReferralStakeCreated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'stake',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'timestamp',
+        type: 'uint256',
+      },
+    ],
+    name: 'RewardClaimedForStake',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'stake',
+        type: 'uint256',
+      },
+    ],
+    name: 'StakeClaimed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'apr',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'poolType',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'startTime',
         type: 'uint256',
       },
       {
@@ -45,7 +194,7 @@ const stakingAbi = [
         type: 'uint256',
       },
     ],
-    name: 'PendingStakesAdded',
+    name: 'Staked',
     type: 'event',
   },
   {
@@ -53,38 +202,72 @@ const stakingAbi = [
     inputs: [
       {
         indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    name: 'TreasuryRewardClaimed',
+    type: 'event',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'poolType',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '_apr',
+        type: 'uint256',
+      },
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'StakeTokens',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
         internalType: 'address',
         name: 'user',
         type: 'address',
       },
       {
-        indexed: false,
         internalType: 'uint256',
         name: 'level',
         type: 'uint256',
       },
     ],
-    name: 'PendingStakesDeleted',
-    type: 'event',
+    name: 'activatePendingRefStake',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: true,
         internalType: 'address',
         name: 'user',
         type: 'address',
       },
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'referrer',
-        type: 'address',
-      },
     ],
-    name: 'Registered',
-    type: 'event',
+    name: 'activeStakesForLevels',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
   },
   {
     inputs: [
@@ -94,7 +277,7 @@ const stakingAbi = [
         type: 'address',
       },
     ],
-    name: 'allowedToCall',
+    name: 'added',
     outputs: [
       {
         internalType: 'bool',
@@ -108,16 +291,81 @@ const stakingAbi = [
   {
     inputs: [
       {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'allUsers',
+    outputs: [
+      {
         internalType: 'address',
-        name: 'user',
+        name: '',
         type: 'address',
       },
     ],
-    name: 'getAllRefrees',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'apr',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'claimAllReward',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'claimTreasuryReward',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'id',
+        type: 'uint256',
+      },
+    ],
+    name: 'getAllReferredStakes',
+    outputs: [
+      {
+        internalType: 'uint256[]',
+        name: 'stakes',
+        type: 'uint256[]',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getAllUsers',
     outputs: [
       {
         internalType: 'address[]',
-        name: '',
+        name: 'users',
         type: 'address[]',
       },
     ],
@@ -131,17 +379,50 @@ const stakingAbi = [
         name: 'user',
         type: 'address',
       },
+    ],
+    name: 'getEligibility',
+    outputs: [
       {
         internalType: 'uint256',
         name: 'level',
         type: 'uint256',
       },
     ],
-    name: 'getPendingStakesForLevel',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'getPendingAmountForDay',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'getUserActiveStakes',
     outputs: [
       {
         internalType: 'uint256[]',
-        name: '',
+        name: 'stakes',
         type: 'uint256[]',
       },
     ],
@@ -156,36 +437,12 @@ const stakingAbi = [
         type: 'address',
       },
     ],
-    name: 'getReferrer',
+    name: 'getUserStakesLength',
     outputs: [
-      {
-        internalType: 'address',
-        name: '',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: '',
-        type: 'address',
-      },
       {
         internalType: 'uint256',
-        name: '',
+        name: 'totalStakes',
         type: 'uint256',
-      },
-    ],
-    name: 'getRefrees',
-    outputs: [
-      {
-        internalType: 'address',
-        name: '',
-        type: 'address',
       },
     ],
     stateMutability: 'view',
@@ -199,7 +456,26 @@ const stakingAbi = [
         type: 'address',
       },
     ],
-    name: 'getStakeAmount',
+    name: 'getUserTotalReferralReward',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'getUserTotalStakeReward',
     outputs: [
       {
         internalType: 'uint256',
@@ -214,34 +490,50 @@ const stakingAbi = [
     inputs: [
       {
         internalType: 'uint256',
-        name: 'i',
+        name: '',
         type: 'uint256',
       },
     ],
-    name: 'getStakeAmountForLevel',
+    name: 'idToStake',
     outputs: [
-      {
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'pure',
-    type: 'function',
-  },
-  {
-    inputs: [
       {
         internalType: 'address',
         name: 'user',
         type: 'address',
       },
-    ],
-    name: 'getUserEligibleLevel',
-    outputs: [
       {
         internalType: 'uint256',
-        name: 'level',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'apr',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'poolType',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'startTime',
+        type: 'uint256',
+      },
+      {
+        internalType: 'bool',
+        name: 'isReferral',
+        type: 'bool',
+      },
+      {
+        internalType: 'bool',
+        name: 'active',
+        type: 'bool',
+      },
+      {
+        internalType: 'uint256',
+        name: 'referredStakes',
         type: 'uint256',
       },
     ],
@@ -250,38 +542,110 @@ const stakingAbi = [
   },
   {
     inputs: [
-      {
-        internalType: 'address',
-        name: 'user',
-        type: 'address',
-      },
       {
         internalType: 'uint256',
         name: 'stakeId',
         type: 'uint256',
       },
     ],
-    name: 'getUserReferralTrail',
+    name: 'isStakeActive',
     outputs: [
       {
-        components: [
-          {
-            internalType: 'address',
-            name: 'referrer',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'level',
-            type: 'uint256',
-          },
-        ],
-        internalType: 'struct Referal.Referral[]',
-        name: '',
-        type: 'tuple[]',
+        internalType: 'bool',
+        name: 'active',
+        type: 'bool',
       },
     ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'lastClaimedTimestamp',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'levelToAprCommision',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'stakeAmount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'poolType',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '_apr',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'start',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'id',
+        type: 'uint256',
+      },
+    ],
+    name: 'manageReferral',
+    outputs: [],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'minimumStakingAmount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
     type: 'function',
   },
   {
@@ -298,14 +662,21 @@ const stakingAbi = [
     type: 'function',
   },
   {
-    inputs: [
+    inputs: [],
+    name: 'publicSaleContract',
+    outputs: [
       {
         internalType: 'address',
         name: '',
         type: 'address',
       },
     ],
-    name: 'referedBy',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'referralContract',
     outputs: [
       {
         internalType: 'address',
@@ -319,14 +690,25 @@ const stakingAbi = [
   {
     inputs: [
       {
-        internalType: 'address',
-        name: 'referrer',
-        type: 'address',
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
       },
     ],
-    name: 'register',
-    outputs: [],
-    stateMutability: 'nonpayable',
+    name: 'referredStakes',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
     type: 'function',
   },
   {
@@ -337,13 +719,168 @@ const stakingAbi = [
     type: 'function',
   },
   {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'time',
+        type: 'uint256',
+      },
+    ],
+    name: 'setLastClaimedTimestamp',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_tge',
+        type: 'uint256',
+      },
+    ],
+    name: 'setTge',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_treasury',
+        type: 'address',
+      },
+    ],
+    name: 'setTreasury',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'stakeDuration',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'stakeRewardClaimed',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
-    name: 'stakingContract',
+    name: 'stakingDetails',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '_value',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'id',
+        type: 'uint256',
+      },
+    ],
+    name: 'stopReferalApr',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'tge',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'token',
     outputs: [
       {
         internalType: 'address',
         name: '',
         type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalClaimed',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalStakedTokens',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'totalWithdrawnTokens',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
       },
     ],
     stateMutability: 'view',
@@ -363,52 +900,84 @@ const stakingAbi = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'treasury',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'treasuryAmountClaimed',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       {
         internalType: 'address',
-        name: 'user',
+        name: 'referral',
+        type: 'address',
+      },
+    ],
+    name: 'updateReferralContract',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'poolId',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'duration',
+        type: 'uint256',
+      },
+    ],
+    name: 'updateStakeDuration',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
         type: 'address',
       },
       {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'userDailyRewardClaimed',
+    outputs: [
+      {
         internalType: 'bool',
-        name: 'allowed',
+        name: '',
         type: 'bool',
       },
     ],
-    name: 'updateAllowed',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'user',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: 'level',
-        type: 'uint256',
-      },
-    ],
-    name: 'updatePendingStakes',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'staking',
-        type: 'address',
-      },
-    ],
-    name: 'updateStakingAddress',
-    outputs: [],
-    stateMutability: 'nonpayable',
+    stateMutability: 'view',
     type: 'function',
   },
   {
@@ -423,13 +992,70 @@ const stakingAbi = [
         name: '',
         type: 'uint256',
       },
+    ],
+    name: 'userStakedByType',
+    outputs: [
       {
         internalType: 'uint256',
         name: '',
         type: 'uint256',
       },
     ],
-    name: 'userLevelRemainingStake',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'userStakes',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'userTotalTokenStaked',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'userTotalTokenWithdrawn',
     outputs: [
       {
         internalType: 'uint256',
@@ -447,28 +1073,15 @@ const stakingAbi = [
         name: 'user',
         type: 'address',
       },
-    ],
-    name: 'viewUserReferralTrail',
-    outputs: [
       {
-        components: [
-          {
-            internalType: 'address',
-            name: 'referrer',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'level',
-            type: 'uint256',
-          },
-        ],
-        internalType: 'struct Referal.Referral[]',
-        name: '',
-        type: 'tuple[]',
+        internalType: 'uint256',
+        name: 'stake',
+        type: 'uint256',
       },
     ],
-    stateMutability: 'view',
+    name: 'withdrawUserTokens',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
 ];
