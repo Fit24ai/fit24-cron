@@ -179,7 +179,7 @@ export class TransactionService {
 
             await this.buyToken(
               transaction,
-              parsedEvent.args[0],
+              parseEther(formatUnits(parsedEvent.args[0], 6)),
               user.walletAddress,
               parsedEvent.args[1],
               Number(parsedEvent.args[3]),
