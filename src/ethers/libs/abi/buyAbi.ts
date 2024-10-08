@@ -206,6 +206,25 @@ export const buyAbi = [
     type: 'function',
   },
   {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'allowedToCall',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'amountRaised',
     outputs: [
@@ -519,6 +538,24 @@ export const buyAbi = [
       },
     ],
     name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+      {
+        internalType: 'bool',
+        name: 'isAllowed',
+        type: 'bool',
+      },
+    ],
+    name: 'updateAllowed',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',

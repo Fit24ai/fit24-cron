@@ -6,9 +6,9 @@
 // export const ethereumPaymentContractAddress = "0x8B7547c84D435e96812b54B7d2AaEA48D4c49EDB"
 
 // *Prod
-export const IcoContract = '0x6a9f5Dae49b4414DFd32Cfd2aEea6f809E9CDE81';
-export const StakingContract = '0x6a9f5Dae49b4414DFd32Cfd2aEea6f809E9CDE81';
-export const BuyContract = '0xe30ce7C1daF26c9748B19B6b16D7B41d6254089B';
+export const IcoContract = '0x3363f5F57dE6adF73Aabb946DE63aD87C61664df';
+export const StakingContract = '0x3363f5F57dE6adF73Aabb946DE63aD87C61664df';
+export const BuyContract = '0x49DE6A49A3BC99669c13d5d6dCa7C39d1B7a1379';
 export const binancePaymentContractAddress =
   '0x72e56adb351Bc1DA1A37B2C5bB6cA40fBB373322';
 export const ethereumPaymentContractAddress =

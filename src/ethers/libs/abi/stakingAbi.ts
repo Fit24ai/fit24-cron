@@ -748,6 +748,19 @@ const stakingAbi = [
     inputs: [
       {
         internalType: 'address',
+        name: '_token',
+        type: 'address',
+      },
+    ],
+    name: 'setToken',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
         name: '_treasury',
         type: 'address',
       },
@@ -1064,6 +1077,37 @@ const stakingAbi = [
       },
     ],
     stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'wallet',
+        type: 'address',
+      },
+    ],
+    name: 'withdrawFunds',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_token',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'wallet',
+        type: 'address',
+      },
+    ],
+    name: 'withdrawToken',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {

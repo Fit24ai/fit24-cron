@@ -576,8 +576,8 @@ export class TransactionService {
     //   return;
     // }
     // this.hasRun = true;
-    this.syncPaymentReceived(99);
-    this.syncEthereumPaymentReceived(99);
+    this.syncPaymentReceived(899);
+    this.syncEthereumPaymentReceived(199);
     // this.updateStakes();
     // this.saveStakeTransaction(
     //   '0x0251abb6b4a6619a45b4594394721e93e8ae1ff737b483b34da07e04d7e2f997',
