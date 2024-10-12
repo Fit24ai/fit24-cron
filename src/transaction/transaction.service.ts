@@ -807,13 +807,13 @@ export class TransactionService {
   //   console.log(result);
   // }
 
-  private hasRun = false;
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  // private hasRun = false;
+  @Cron(CronExpression.EVERY_10_SECONDS)
   handleCron() {
-    if (this.hasRun) {
-      return;
-    }
-    this.hasRun = true;
+    // if (this.hasRun) {
+    //   return;
+    // }
+    // this.hasRun = true;
     // this.numberrr(BigInt(1000000000000000000000));
     // this.updateNewReferrals();
     // this.MigrateData();

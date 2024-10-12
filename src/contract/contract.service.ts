@@ -105,6 +105,6 @@ export class ContractService {
     // this.hasRun = true;
     // console.log('Hello Ethers');
     // await this.updateClaimTreasury();
-    // await this.readOnly();
+    await this.readOnly();
   }
 }
