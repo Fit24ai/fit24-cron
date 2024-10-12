@@ -12,6 +12,10 @@ import {
   StakeDuration,
   StakeDurationSchema,
 } from 'src/staking/schema/stakeDuration.schema';
+import {
+  StakingMigrate,
+  StakingMigrateSchema,
+} from './schema/stakingMigrate.schema';
 
 @Module({
   imports: [
@@ -19,6 +23,7 @@ import {
       { name: StakingTransaction.name, schema: StakingTransactionSchema },
       { name: User.name, schema: UserSchema },
       { name: Staking.name, schema: StakingSchema },
+      { name: StakingMigrate.name, schema: StakingMigrateSchema },
       { name: StakeDuration.name, schema: StakeDurationSchema },
     ]),
   ],

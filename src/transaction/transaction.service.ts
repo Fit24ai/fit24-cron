@@ -1,4 +1,8 @@
-import { ChainEnum, StakingStatus } from './../types/transaction';
+import {
+  ChainEnum,
+  MigrationStatus,
+  StakingStatus,
+} from './../types/transaction';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EthersService } from 'src/ethers/ethers.service';
@@ -25,6 +29,7 @@ import { Staking } from 'src/staking/schema/staking.schema';
 import { StakeDuration } from 'src/staking/schema/stakeDuration.schema';
 import { IRefStakeLogs } from './types/logs';
 import { RedisClientType } from 'redis';
+import { StakingMigrate } from './schema/stakingMigrate.schema';
 
 // const ether = new EthersService();
 
@@ -35,6 +40,8 @@ export class TransactionService {
     private Transaction: Model<StakingTransaction>,
     @InjectModel(Staking.name)
     private StakingModel: Model<Staking>,
+    @InjectModel(StakingMigrate.name)
+    private StakingMigrateModel: Model<StakingMigrate>,
     @InjectModel(StakeDuration.name)
     private StakeDurationModel: Model<StakeDuration>,
     @InjectModel(User.name)
@@ -377,7 +384,7 @@ export class TransactionService {
             amount: this.BigToNumber(parsedLog[1]),
             apr: Number(idToStake[2]) / 10,
             poolType: Number(idToStake[3]),
-            startTime: Number(stakedLogs.args[4]), // Changed from stakedLogs.args[4] to parsedLog[4]
+            startTime: Number(idToStake[4]), // Changed from stakedLogs.args[4] to parsedLog[4]
             stakeDuration: stakeDuration.duration,
             txHash,
             isReferred: true,
@@ -537,52 +544,287 @@ export class TransactionService {
     return bigNumberValue.dividedBy(new BigNumber(10).pow(18)).toNumber();
   }
 
-  async updateStakes() {
-    const stakes = await this.StakingModel.find({
-      transactionStatus: TransactionStatusEnum.CONFIRMED,
-    });
+  // async updateStakes() {
+  //   const stakes = await this.StakingModel.find({
+  //     transactionStatus: TransactionStatusEnum.CONFIRMED,
+  //   });
 
-    // const stake = await this.StakingModel.findOne({ stakeId: 23 });
-    // const idToStake = await this.ethersService.icoContract.idToStake(
-    //   Number(stake.stakeId),
-    // );
-    // stake.apr = Number(idToStake[2]) / 10;
-    // stake.amount = this.BigToNumber(idToStake[1]);
-    // stake.poolType = Number(idToStake[3]);
-    // await stake.save();
+  //   // const stake = await this.StakingModel.findOne({ stakeId: 23 });
+  //   // const idToStake = await this.ethersService.icoContract.idToStake(
+  //   //   Number(stake.stakeId),
+  //   // );
+  //   // stake.apr = Number(idToStake[2]) / 10;
+  //   // stake.amount = this.BigToNumber(idToStake[1]);
+  //   // stake.poolType = Number(idToStake[3]);
+  //   // await stake.save();
 
-    // console.log(this.BigToNumber(idToStake[1]));
-    // console.log(idToStake[1])
-    // console.log('updated');
+  //   // console.log(this.BigToNumber(idToStake[1]));
+  //   // console.log(idToStake[1])
+  //   // console.log('updated');
 
-    stakes.map(async (stake) => {
-      const idToStake = await this.ethersService.icoContract.idToStake(
-        Number(stake.stakeId),
-      );
-      stake.apr = Number(idToStake[2]) / 10;
-      stake.amount = this.BigToNumber(idToStake[1]);
-      stake.poolType = Number(idToStake[3]);
-      stake.isReferred = Boolean(idToStake[5]);
-      stake.startTime = Number(idToStake[4]);
-      await stake.save();
-      console.log('updated');
-    });
-  }
+  //   stakes.map(async (stake) => {
+  //     const idToStake = await this.ethersService.icoContract.idToStake(
+  //       Number(stake.stakeId),
+  //     );
+  //     stake.apr = Number(idToStake[2]) / 10;
+  //     stake.amount = this.BigToNumber(idToStake[1]);
+  //     stake.poolType = Number(idToStake[3]);
+  //     stake.isReferred = Boolean(idToStake[5]);
+  //     stake.startTime = Number(idToStake[4]);
+  //     await stake.save();
+  //     console.log('updated');
+  //   });
+  // }
 
-  // private hasRun = false;
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // async saveStakeTransactionMigrate(
+  //   txHash: string,
+  //   walletAddress: string,
+  //   pooltype: number,
+  //   id: string,
+  // ) {
+  //   const stakeDuration = await this.StakeDurationModel.findOne({
+  //     poolType: pooltype,
+  //   });
+  //   const newTransaction = await this.StakingMigrateModel.create({
+  //     walletAddress: walletAddress,
+  //     txHash: txHash,
+  //     startTime: Math.floor(Date.now() / 1000),
+  //     stakeDuration: stakeDuration.duration,
+  //   });
+  //   const receipt =
+  //     await this.ethersService.blokfitProvider.getTransactionReceipt(txHash);
+  //   console.log(receipt);
+  //   console.log(txHash);
+  //   console.log('Logs Length:', receipt.logs.length);
+
+  //   const stakedLogs2 = receipt.logs.filter(
+  //     (log) => log.topics[0] === process.env.STAKED_TOPIC,
+  //   );
+
+  //   console.log('Filtered Staked Logs:', stakedLogs2);
+
+  //   let stakedLogs;
+  //   for (const log of stakedLogs2) {
+  //     try {
+  //       const parsedLog = this.ethersService.stakingInterface.parseLog(log);
+  //       stakedLogs = parsedLog;
+  //       console.log('Parsed Log:', parsedLog.args);
+  //     } catch (error) {
+  //       console.error('Failed to parse filtered log:', error);
+  //     }
+  //   }
+
+  //   const filteredLogs = receipt.logs.filter(
+  //     (log) => log.topics[0] === process.env.REFERRAL_TOPIC,
+  //   );
+
+  //   console.log('filteredLogs', filteredLogs);
+
+  //   if (!stakeDuration) {
+  //     throw new Error('Stake duration not found');
+  //   }
+
+  //   if (filteredLogs.length > 0) {
+  //     const refStakedLogs = await Promise.all(
+  //       filteredLogs.map(async (log) => {
+  //         const parsedLog =
+  //           this.ethersService.stakingInterface.parseLog(log).args;
+
+  //         const idToStake = await this.ethersService.icoContract.idToStake(
+  //           Number(parsedLog[2]),
+  //         );
+  //         console.log(idToStake);
+
+  //         const formattedReferralLog: IRefStakeLogs = {
+  //           stakeId: Number(parsedLog[2]),
+  //           walletAddress: parsedLog[0],
+  //           amount: this.BigToNumber(parsedLog[1]),
+  //           apr: Number(idToStake[2]) / 10,
+  //           poolType: Number(idToStake[3]),
+  //           startTime: Number(idToStake[4]), // Changed from stakedLogs.args[4] to parsedLog[4]
+  //           stakeDuration: stakeDuration.duration,
+  //           txHash,
+  //           isReferred: true,
+  //           level: Number(parsedLog[3]),
+  //           refId: Number(parsedLog[4]),
+  //           transactionStatus:
+  //             receipt.status === 1
+  //               ? TransactionStatusEnum.CONFIRMED
+  //               : TransactionStatusEnum.FAILED,
+  //         };
+
+  //         return formattedReferralLog;
+  //       }),
+  //     );
+
+  //     console.log(refStakedLogs);
+  //     await this.StakingMigrateModel.insertMany(refStakedLogs);
+  //   }
+
+  //   console.log(stakedLogs.args);
+
+  //   const idToStake = await this.ethersService.icoContract.idToStake(
+  //     Number(stakedLogs.args[5]),
+  //   );
+
+  //   const updateRecord = await this.StakingMigrateModel.findByIdAndUpdate(
+  //     newTransaction._id,
+  //     {
+  //       stakeId: Number(stakedLogs.args[5]),
+  //       walletAddress: stakedLogs.args[0],
+  //       amount: this.BigToNumber(idToStake[1]),
+  //       apr: Number(idToStake[2]) / 10,
+  //       poolType: Number(idToStake[3]),
+  //       startTime: Number(stakedLogs.args[4]),
+  //       stakeDuration: stakeDuration.duration,
+  //       txHash,
+  //       isReferred: false,
+  //       transactionStatus:
+  //         receipt.status === 1
+  //           ? TransactionStatusEnum.CONFIRMED
+  //           : TransactionStatusEnum.FAILED,
+  //     },
+  //     {
+  //       new: true,
+  //     },
+  //   );
+  //   const transaction = await this.Transaction.findByIdAndUpdate(id, {
+  //     distributionHash: txHash,
+  //     distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //   });
+  //   transaction.migrationStatus = MigrationStatus.MIGRATED;
+  //   await transaction.save();
+  //   return { stake: updateRecord };
+  // }
+
+  // public async MigrateData() {
+  //   const stakes = await this.StakingModel.find({
+  //     isReferred: false,
+  //     transactionStatus: TransactionStatusEnum.CONFIRMED,
+  //   });
+  //   console.log(stakes.length);
+
+  //   for (const stake of stakes) {
+  //     const transaction = await this.Transaction.findOne({
+  //       distributionHash: stake.txHash,
+  //       distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //     });
+  //     if (transaction) {
+  //       if (transaction.migrationStatus === MigrationStatus.MIGRATED) {
+  //         console.log('dont continue');
+  //       } else {
+  //         console.log(stake.txHash);
+  //         console.log(stake.walletAddress);
+  //         const bigAmount = parseEther(stake.amount.toString());
+  //         console.log(String(bigAmount));
+  //         try {
+  //           console.log(
+  //             String(bigAmount),
+  //             stake.poolType,
+  //             stake.apr * 10,
+  //             stake.walletAddress,
+  //             stake.startTime,
+  //           );
+  //           const tx =
+  //             await this.ethersService.signedIcoContract.StakeTokensAdmin(
+  //               String(bigAmount),
+  //               stake.poolType,
+  //               stake.apr * 10,
+  //               stake.walletAddress,
+  //               stake.startTime,
+  //             );
+  //           tx.wait();
+  //           try {
+  //             await this.saveStakeTransactionMigrate(
+  //               tx.hash,
+  //               stake.walletAddress,
+  //               stake.poolType,
+  //               transaction.id,
+  //             );
+
+  //             console.log('stake created');
+  //           } catch (error) {
+  //             console.log(error);
+  //           }
+
+  //           console.log('done');
+  //         } catch (error) {
+  //           console.log(error);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // public async updateTransactions() {
+  //   const transactions = await this.Transaction.find({
+  //     distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //     stakingStatus: StakingStatus.STAKED,
+  //   });
+  //   transactions.map(async (transaction) => {
+  //     await this.Transaction.updateOne(
+  //       { _id: transaction._id },
+  //       { migrationStatus: MigrationStatus.PENDING },
+  //     );
+  //   });
+  // }
+
+  // public async updateNewReferrals() {
+  //   const users = await this.User.find();
+  //   for (const user of users) {
+  //     const upline = await this.ethersService.oldReferralContract.getReferrer(
+  //       user.walletAddress,
+  //     );
+  //     if (upline !== '0x0000000000000000000000000000000000000000') {
+  //       try {
+  //         const tx =
+  //           await this.ethersService.newReferralSignedContract.register(
+  //             user.walletAddress,
+  //             upline,
+  //           );
+  //         const receipt =
+  //           await this.ethersService.blokfitProvider.waitForTransaction(
+  //             tx.hash,
+  //           );
+  //         console.log('referral added');
+  //       } catch (error) {
+  //         console.log(error);
+  //       }
+  //     }
+
+  //     const newUpline =
+  //       await this.ethersService.newReferralContract.getReferrer(
+  //         user.walletAddress,
+  //       );
+  //     console.log('wallet', user.walletAddress);
+  //     console.log('OLD upline', upline);
+  //     console.log('NEW upline', newUpline);
+  //   }
+  // }
+
+  // public async numberrr(number: bigint) {
+  //   const result = this.BigToNumber(number);
+  //   console.log(result);
+  // }
+
+  private hasRun = false;
+  @Cron(CronExpression.EVERY_5_SECONDS)
   handleCron() {
-    // if (this.hasRun) {
-    //   return;
-    // }
-    // this.hasRun = true;
+    if (this.hasRun) {
+      return;
+    }
+    this.hasRun = true;
+    // this.numberrr(BigInt(1000000000000000000000));
+    // this.updateNewReferrals();
+    // this.MigrateData();
+    // this.updateTransactions();
     this.syncPaymentReceived(899);
     this.syncEthereumPaymentReceived(199);
     // this.updateStakes();
-    // this.saveStakeTransaction(
-    //   '0x0251abb6b4a6619a45b4594394721e93e8ae1ff737b483b34da07e04d7e2f997',
-    //   '0x87668Df194F50BEa46F021A09EE2B361eEBA3617',
-    //   10,
+    // this.saveStakeTransactionMigrate(
+    //   '0x6c2feb2448781cc00ce13837fce4178b914dc6d517f24cf26bddbaef5ac715de',
+    //   '0x6a03f4383bcADBCf8B948a8A4058E07C55E7068b',
+    //   12,
     // );
   }
 }

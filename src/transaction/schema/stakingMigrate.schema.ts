@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { MigrationStatus, TransactionStatusEnum } from 'src/types/transaction';
 
-export type StakingDocument = HydratedDocument<Staking>;
+export type StakingMigrateDocument = HydratedDocument<StakingMigrate>;
 
-@Schema({ timestamps: true, collection: 'stakings' })
-export class Staking {
+@Schema({ timestamps: true, collection: 'staking-migrate' })
+export class StakingMigrate {
   @Prop({ type: Number, required: true, default: 0 })
   stakeId: number;
   @Prop({ type: String, required: true })
@@ -48,7 +48,7 @@ export class Staking {
     default: TransactionStatusEnum.PENDING,
   })
   transactionStatus: TransactionStatusEnum;
-
 }
 
-export const StakingSchema = SchemaFactory.createForClass(Staking);
+export const StakingMigrateSchema =
+  SchemaFactory.createForClass(StakingMigrate);

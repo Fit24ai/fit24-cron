@@ -5,15 +5,18 @@ import {
   IcoContract,
   binancePaymentContractAddress,
   StakingContract,
+  oldReferalContract,
+  newReferalContract,
 } from './libs/contract';
 import { icoAbi } from './libs/abi/icoAbi';
 import { config } from 'dotenv';
 import stakingAbi from './libs/abi/stakingAbi';
 import { paymentAbi } from './libs/abi/paymentAbi';
 import { buyAbi } from './libs/abi/buyAbi';
+import { oldStakingAbi } from './libs/abi/oldStakingAbi';
+import { referralAbi } from './libs/abi/referralAbi';
 
 config();
-
 @Injectable()
 export class EthersService {
   // public binanceProvider = new JsonRpcProvider(
@@ -32,33 +35,64 @@ export class EthersService {
   public blokfitProvider = new JsonRpcProvider(
     process.env.BLOKFIT_RPC_PROVIDER,
   );
-  
+  // public blokfitProvider = new JsonRpcProvider(
+  //   'https://bsc-testnet-rpc.publicnode.com',
+  // );
 
-  // private readonly signer = new Wallet(process.env.PRIVATE_KEY, this.binanceProvider);
-  private readonly signer = new Wallet(process.env.PRIVATE_KEY, this.blokfitProvider);
+  // private readonly signer = new Wallet(
+  //   process.env.PRIVATE_KEY,
+  //   this.binanceProvider,
+  // );
+  private readonly signer = new Wallet(
+    process.env.PRIVATE_KEY,
+    this.blokfitProvider,
+  );
 
-  public icoContract = new Contract(StakingContract, stakingAbi, this.blokfitProvider);
+  public icoContract = new Contract(
+    StakingContract,
+    stakingAbi,
+    this.blokfitProvider,
+  );
+
+  public oldReferralContract = new Contract(
+    oldReferalContract,
+    referralAbi,
+    this.blokfitProvider,
+  );
+  public newReferralContract = new Contract(
+    newReferalContract,
+    referralAbi,
+    this.blokfitProvider
+  )
+  // public newReferralContract = new Contract(
+  //   newReferalContract,
+  //   referralAbi,
+  //   this.binanceProvider,
+  // );
+  public newReferralSignedContract = new Contract(
+    newReferalContract,
+    referralAbi,
+    this.signer,
+  );
+
+  // public oldStakingContract = new Contract(
+  //   OldStakingContract,
+  //   oldStakingAbi,
+  //   this.blokfitProvider,
+  // );
   public signedIcoContract = new Contract(
     StakingContract,
     stakingAbi,
     this.signer,
   );
-  public signedBuyIcoContract = new Contract(
-    BuyContract,
-    buyAbi,
-    this.signer,
-  );
+  public signedBuyIcoContract = new Contract(BuyContract, buyAbi, this.signer);
 
   public paymentContract = new Contract(
     binancePaymentContractAddress,
     paymentAbi,
     this.binanceProvider,
   );
-  public buyContract = new Contract(
-    BuyContract,
-    buyAbi,
-    this.binanceProvider,
-  );
+  public buyContract = new Contract(BuyContract, buyAbi, this.binanceProvider);
 
   public icoInterface = new Interface(icoAbi);
 
@@ -67,7 +101,6 @@ export class EthersService {
   public buyInterface = new Interface(buyAbi);
 
   public paymentInterface = new Interface(paymentAbi);
-
 
   public binanceStakingContract = new Contract(
     StakingContract,

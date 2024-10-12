@@ -23,3 +23,10 @@ export enum StakingStatus {
   STAKED = 'STAKED',
   FAILED = 'FAILED',
 }
+
+export enum MigrationStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  MIGRATED = 'MIGRATED',
+  FAILED = 'FAILED',
+}

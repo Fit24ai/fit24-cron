@@ -1,4 +1,4 @@
-export const icoAbi = [
+export const oldStakingAbi = [
   {
     inputs: [],
     stateMutability: 'nonpayable',
@@ -17,6 +17,12 @@ export const icoAbi = [
         indexed: false,
         internalType: 'uint256',
         name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'timestamp',
         type: 'uint256',
       },
     ],
@@ -111,6 +117,12 @@ export const icoAbi = [
         indexed: false,
         internalType: 'uint256',
         name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'timestamp',
         type: 'uint256',
       },
     ],
@@ -229,39 +241,6 @@ export const icoAbi = [
   {
     inputs: [
       {
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'poolType',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: '_apr',
-        type: 'uint256',
-      },
-      {
-        internalType: 'address',
-        name: 'user',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: 'timestamp',
-        type: 'uint256',
-      },
-    ],
-    name: 'StakeTokensAdmin',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
         internalType: 'address',
         name: 'user',
         type: 'address',
@@ -355,19 +334,8 @@ export const icoAbi = [
     type: 'function',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'stakeId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'bool',
-        name: '_isActive',
-        type: 'bool',
-      },
-    ],
-    name: 'dectivateStake',
+    inputs: [],
+    name: 'claimTreasuryReward',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -407,30 +375,6 @@ export const icoAbi = [
   {
     inputs: [
       {
-        internalType: 'uint256',
-        name: 'start',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'end',
-        type: 'uint256',
-      },
-    ],
-    name: 'getDays',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'pure',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
         internalType: 'address',
         name: 'user',
         type: 'address',
@@ -441,6 +385,25 @@ export const icoAbi = [
       {
         internalType: 'uint256',
         name: 'level',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'user',
+        type: 'address',
+      },
+    ],
+    name: 'getPendingAmountForDay',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'amount',
         type: 'uint256',
       },
     ],
@@ -479,25 +442,6 @@ export const icoAbi = [
       {
         internalType: 'uint256',
         name: 'totalStakes',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'user',
-        type: 'address',
-      },
-    ],
-    name: 'getUserTotalPendingReward',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'pending',
         type: 'uint256',
       },
     ],
@@ -610,6 +554,19 @@ export const icoAbi = [
         internalType: 'bool',
         name: 'active',
         type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'lastClaimedTimestamp',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
       },
     ],
     stateMutability: 'view',
@@ -765,6 +722,19 @@ export const icoAbi = [
     inputs: [
       {
         internalType: 'uint256',
+        name: 'time',
+        type: 'uint256',
+      },
+    ],
+    name: 'setLastClaimedTimestamp',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
         name: '_tge',
         type: 'uint256',
       },
@@ -836,39 +806,6 @@ export const icoAbi = [
       },
     ],
     stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'poolType',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: '_apr',
-        type: 'uint256',
-      },
-      {
-        internalType: 'address',
-        name: 'user',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: 'timestamp',
-        type: 'uint256',
-      },
-    ],
-    name: 'stakeWithoutReferral',
-    outputs: [],
-    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -1004,24 +941,6 @@ export const icoAbi = [
   {
     inputs: [
       {
-        internalType: 'uint256',
-        name: 'stake',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'reward',
-        type: 'uint256',
-      },
-    ],
-    name: 'updateClaimed',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
         internalType: 'address',
         name: 'referral',
         type: 'address',
@@ -1116,25 +1035,6 @@ export const icoAbi = [
       {
         internalType: 'uint256',
         name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'stake',
-        type: 'uint256',
-      },
-    ],
-    name: 'userTotalStakeRewardForTenure',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'amount',
         type: 'uint256',
       },
     ],

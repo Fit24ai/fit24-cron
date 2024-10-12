@@ -3,6 +3,7 @@ import {
   ChainEnum,
   DistributionStatusEnum,
   StakingStatus,
+  MigrationStatus,
 } from 'src/types/transaction';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
@@ -61,6 +62,14 @@ export class StakingTransaction {
     default: StakingStatus.PENDING,
   })
   stakingStatus: StakingStatus;
+
+  @Prop({
+    type: String,
+    enum: MigrationStatus,
+    required: true,
+    default: MigrationStatus.PENDING,
+  })
+  migrationStatus: MigrationStatus;
 }
 
 export const StakingTransactionSchema =
