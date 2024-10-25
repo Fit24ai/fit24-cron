@@ -9,6 +9,7 @@ import { EthersService } from 'src/ethers/ethers.service';
 import {
   binancePaymentContractAddress,
   ethereumPaymentContractAddress,
+  oldFit24BuyTokenIco,
 } from 'src/ethers/libs/contract';
 import { StakingTransaction } from './schema/stakingTransaction.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -16,7 +17,12 @@ import { Model } from 'mongoose';
 import EthCrypto from 'eth-crypto';
 import BigNumber from 'bignumber.js';
 import { v4 } from 'uuid';
-import { formatUnits, parseEther, solidityPackedKeccak256 } from 'ethers';
+import {
+  ethers,
+  formatUnits,
+  parseEther,
+  solidityPackedKeccak256,
+} from 'ethers';
 
 import {
   DistributionStatusEnum,
@@ -30,6 +36,8 @@ import { StakeDuration } from 'src/staking/schema/stakeDuration.schema';
 import { IRefStakeLogs } from './types/logs';
 import { RedisClientType } from 'redis';
 import { StakingMigrate } from './schema/stakingMigrate.schema';
+import { PresaleTransaction } from './schema/presaleTransaction.schema';
+import { ReferralTransaction } from 'src/staking/schema/referralTransaction.schema';
 
 // const ether = new EthersService();
 
@@ -38,6 +46,10 @@ export class TransactionService {
   constructor(
     @InjectModel(StakingTransaction.name)
     private Transaction: Model<StakingTransaction>,
+    @InjectModel(PresaleTransaction.name)
+    private presaleTransaction: Model<PresaleTransaction>,
+    @InjectModel(ReferralTransaction.name)
+    private referrlaTransaction: Model<ReferralTransaction>,
     @InjectModel(Staking.name)
     private StakingModel: Model<Staking>,
     @InjectModel(StakingMigrate.name)
@@ -318,7 +330,16 @@ export class TransactionService {
         existingTransaction.stakingStatus = StakingStatus.FAILED;
         await existingTransaction.save();
       }
+      try {
+        await this.createRefIncome(
+          existingTransaction.transactionHash,
+          existingTransaction.chain,
+        );
+      } catch (error) {
+        console.log(error);
+      }
     }
+
     // await existingTransaction.save();
   }
 
@@ -434,18 +455,87 @@ export class TransactionService {
     return { stake: updateRecord };
   }
 
-  private BigIntToNumber(value: BigInt) {
-    return Number(value) / Math.pow(10, 18);
+  async createRefIncome(tx: string, chain: ChainEnum) {
+    if (chain === ChainEnum.BINANCE) {
+      const receipt =
+        await this.ethersService.binanceProvider.getTransactionReceipt(tx);
+      const paymentLogs = receipt.logs.filter(
+        (log) => log.topics[0] === process.env.REFERRAL_INCOME_RECEIVED,
+      );
+      for (const log of paymentLogs) {
+        try {
+          const parsedLog = this.ethersService.paymentInterface.parseLog(log);
+          console.log('Parsed Log:', parsedLog.args);
+          const ref = await this.referrlaTransaction.findOne({
+            transactionHash: tx,
+          });
+          console.log(ref);
+          if (!ref) {
+            await this.referrlaTransaction.create({
+              transactionHash: tx,
+              referrer: parsedLog.args[0],
+              buyer: parsedLog.args[1],
+              buyAmount: this.BigToNumber(parsedLog.args[2]),
+              referralIncome: this.BigToNumber(parsedLog.args[3]),
+              token: parsedLog.args[4],
+              chain: ChainEnum.BINANCE,
+            });
+            console.log('done');
+          }
+        } catch (error) {
+          console.error('Failed to parse filtered log:', error);
+        }
+      }
+    } else {
+      const receipt =
+        await this.ethersService.ethereumProvider.getTransactionReceipt(tx);
+      const paymentLogs = receipt.logs.filter(
+        (log) => log.topics[0] === process.env.REFERRAL_INCOME_RECEIVED,
+      );
+
+      for (const log of paymentLogs) {
+        try {
+          const parsedLog = this.ethersService.paymentInterface.parseLog(log);
+          console.log('Parsed Log:', parsedLog.args);
+          const ref = await this.referrlaTransaction.findOne({
+            transactionHash: tx,
+          });
+          console.log(ref);
+          if (!ref) {
+            await this.referrlaTransaction.create({
+              transactionHash: tx,
+              referrer: parsedLog.args[0],
+              buyer: parsedLog.args[1],
+              buyAmount: this.BigToNumber(
+                parseEther(formatUnits(parsedLog.args[2], 6)),
+              ),
+              referralIncome: this.BigToNumber(
+                parseEther(formatUnits(parsedLog.args[3], 6)),
+              ),
+              token: parsedLog.args[4],
+              chain: ChainEnum.ETHEREUM,
+            });
+            console.log('done');
+          }
+        } catch (error) {
+          console.error('Failed to parse filtered log:', error);
+        }
+      }
+    }
   }
 
-  private async signerSignature(messageHash: string) {
-    const signature = EthCrypto.sign(
-      this.configService.get('PRIVATE_KEY'),
-      messageHash,
-    );
+  // private BigIntToNumber(value: BigInt) {
+  //   return Number(value) / Math.pow(10, 18);
+  // }
 
-    return signature;
-  }
+  // private async signerSignature(messageHash: string) {
+  //   const signature = EthCrypto.sign(
+  //     this.configService.get('PRIVATE_KEY'),
+  //     messageHash,
+  //   );
+
+  //   return signature;
+  // }
 
   async transferTokens(
     walletAddress: string,
@@ -802,9 +892,162 @@ export class TransactionService {
   //   }
   // }
 
-  // public async numberrr(number: bigint) {
-  //   const result = this.BigToNumber(number);
-  //   console.log(result);
+  public async numberrr(number: bigint) {
+    const result = this.BigToNumber(number);
+    console.log(result);
+  }
+
+  // public async updatePresaleTransaction() {
+  //   const transactions = await this.presaleTransaction.find({
+  //     distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //     migrationStatus: MigrationStatus.MIGRATED,
+  //   });
+  //   transactions.map(async (transaction) => {
+  //     const newT = await this.presaleTransaction.updateOne(
+  //       { _id: transaction._id },
+  //       { migrationStatus: MigrationStatus.PENDING },
+  //     );
+  //   });
+  // }
+
+  // public async MigratePresaleData() {
+  //   const blockNumber =
+  //     await this.ethersService.oldBlokfitProvider.getBlockNumber();
+  //   const fromBlock = blockNumber - 1000;
+
+  //   const events = await this.ethersService.oldBlokfitProvider.getLogs({
+  //     address: oldFit24BuyTokenIco,
+  //     fromBlock: fromBlock,
+  //     toBlock: 'latest',
+  //     topics: [
+  //       '0x22f6af6e13430e3e7b6418d01e6a48c1fbce5e8cb1698901fc95134b4b1c58ad',
+  //     ],
+  //   });
+  //   // console.log(events);
+  //   // console.log(events.length);
+
+  //   for (const event of events) {
+  //     const parsedEvent =
+  //       this.ethersService.oldFit24TokenIcoBuyInterface.parseLog(event);
+  //     // console.log(parsedEvent.args);
+  //     const transaction = await this.presaleTransaction.findOne({
+  //       distributionHash: event.transactionHash,
+  //       migrationStatus: MigrationStatus.PENDING,
+  //       distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //     });
+  //     if (transaction) {
+  //       try {
+  //         console.log(
+  //           parsedEvent.args[0],
+  //           String(parsedEvent.args[2]),
+  //           String(parsedEvent.args[3]),
+  //         );
+  //         const tx =
+  //           await this.ethersService.signedBlokfitVestingContract.vestSaleTokens(
+  //             parsedEvent.args[0],
+  //             String(parsedEvent.args[2]),
+  //             String(parsedEvent.args[3]),
+  //           );
+  //         await tx.wait();
+
+  //         const newTransaction = await this.presaleTransaction.updateOne(
+  //           { _id: transaction._id },
+  //           {
+  //             migrationStatus: MigrationStatus.MIGRATED,
+  //             vestingHash: tx.hash,
+  //           },
+  //         );
+  //         console.log('done');
+  //       } catch (error) {}
+  //     }
+  //   }
+
+  //   // const transactions = await this.presaleTransaction.find({
+  //   //   distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //   //   migrationStatus: MigrationStatus.PENDING,
+  //   // });
+  //   // for (const transaction of transactions) {
+  //   //   // console.log(transaction.transactionHash)
+  //   //   try {
+  //   //     const receipt =
+  //   //       await this.ethersService.oldBlokfitProvider.getTransactionReceipt(
+  //   //         transaction.transactionHash,
+  //   //       );
+  //   //     const stakedLogs2 = receipt.logs.filter(
+  //   //       (log) => log.topics[0] === process.env.PRESALE_PAYMENT_RECEIVED,
+  //   //     );
+  //   //     let stakedLogs;
+  //   //     for (const log of stakedLogs2) {
+  //   //       try {
+  //   //         const parsedLog =
+  //   //           this.ethersService.oldPaymentInterface.parseLog(log);
+  //   //         stakedLogs = parsedLog;
+  //   //         // console.log('Parsed Log:', parsedLog.args);
+  //   //       } catch (error) {
+  //   //         console.error('Failed to parse filtered log:', error);
+  //   //       }
+  //   //     }
+  //   //     console.log(String(parseEther(formatUnits(stakedLogs.args[0], 6))), stakedLogs.args[2]);
+  //   //     // const tx =
+  //   //     //   await this.ethersService.signedFit24TokenIcoBuyIcoContract.buyToken(
+  //   //     //     String(stakedLogs.args[0]),
+  //   //     //     stakedLogs.args[2],
+  //   //     //   );
+  //   //     // await tx.wait();
+  //   //     // const newTransaction = await this.presaleTransaction.updateOne(
+  //   //     //   { _id: transaction._id },
+  //   //     //   {
+  //   //     //     migrationStatus: MigrationStatus.MIGRATED,
+  //   //     //     distributionHash: tx.hash,
+  //   //     //   },
+  //   //     // );
+  //   //     console.log("done");
+  //   //   } catch (error) {
+  //   //     // console.log(error);
+  //   //   }
+  //   // }
+  // }
+
+  // async createRefIncomeMigrate() {
+  //   const transactions = await this.Transaction.find({
+  //     distributionStatus: DistributionStatusEnum.DISTRIBUTED,
+  //     chain: ChainEnum.BINANCE,
+  //   });
+
+  //   for (const transaction of transactions) {
+  //     const receipt =
+  //       await this.ethersService.binanceProvider.getTransactionReceipt(
+  //         transaction.transactionHash,
+  //       );
+  //     const paymentLogs = receipt.logs.filter(
+  //       (log) => log.topics[0] === process.env.REFERRAL_INCOME_RECEIVED,
+  //     );
+
+  //     for (const log of paymentLogs) {
+  //       try {
+  //         const parsedLog = this.ethersService.paymentInterface.parseLog(log);
+  //         console.log('Parsed Log:', parsedLog.args);
+  //         const ref = await this.referrlaTransaction.findOne({
+  //           transactionHash: transaction.transactionHash,
+  //         });
+  //         console.log(ref);
+  //         if (!ref) {
+  //           await this.referrlaTransaction.create({
+  //             transactionHash: transaction.transactionHash,
+  //             referrer: parsedLog.args[0],
+  //             buyer: parsedLog.args[1],
+  //             buyAmount: this.BigToNumber(parsedLog.args[2]),
+  //             referralIncome: this.BigToNumber(parsedLog.args[3]),
+  //             token: parsedLog.args[4],
+  //             chain: ChainEnum.BINANCE,
+  //           });
+  //           console.log('done');
+  //         }
+  //       } catch (error) {
+  //         console.error('Failed to parse filtered log:', error);
+  //       }
+  //     }
+  //   }
   // }
 
   // private hasRun = false;
@@ -814,12 +1057,15 @@ export class TransactionService {
     //   return;
     // }
     // this.hasRun = true;
-    // this.numberrr(BigInt(1000000000000000000000));
+    this.syncPaymentReceived(899);
+    this.syncEthereumPaymentReceived(199);
+    // this.MigratePresaleData();
+    // this.createRefIncomeMigrate();
+    // this.updatePresaleTransaction();
+    // this.numberrr(BigInt(12500000000000000000000));
     // this.updateNewReferrals();
     // this.MigrateData();
     // this.updateTransactions();
-    this.syncPaymentReceived(899);
-    this.syncEthereumPaymentReceived(199);
     // this.updateStakes();
     // this.saveStakeTransactionMigrate(
     //   '0x6c2feb2448781cc00ce13837fce4178b914dc6d517f24cf26bddbaef5ac715de',
