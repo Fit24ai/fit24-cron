@@ -330,6 +330,11 @@ export class TransactionService {
         existingTransaction.stakingStatus = StakingStatus.FAILED;
         await existingTransaction.save();
       }
+    }
+    if (
+      existingTransaction.distributionStatus ===
+      DistributionStatusEnum.DISTRIBUTED
+    ) {
       try {
         await this.createRefIncome(
           existingTransaction.transactionHash,
