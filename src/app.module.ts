@@ -9,6 +9,7 @@ import { StakingModule } from './staking/staking.module';
 import { TransactionService } from './transaction/transaction.service';
 import { TransactionModule } from './transaction/transaction.module';
 import { RedisModule } from './redis/redis.module';
+import { CreateStakesModule } from './create-stakes/create-stakes.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { RedisModule } from './redis/redis.module';
     StakingModule,
     TransactionModule,
     RedisModule,
+    CreateStakesModule
   ],
   providers: [ContractService],
 })

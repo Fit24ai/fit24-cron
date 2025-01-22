@@ -30,3 +30,9 @@ export enum MigrationStatus {
   MIGRATED = 'MIGRATED',
   FAILED = 'FAILED',
 }
+
+export enum PendingStakesEnum {
+  PENDING = 'PENDING',
+  ACTIVATED = 'ACTIVATED',
+  FAILED = 'FAILED',
+}
