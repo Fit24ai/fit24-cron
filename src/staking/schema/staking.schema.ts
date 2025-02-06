@@ -17,6 +17,9 @@ export class Staking {
   @Prop({ type: Number, required: true, default: 0 })
   amount: number;
 
+  @Prop({ type: Number, nullable: true, default: 0 })
+  usdAmount: number;
+
   @Prop({ type: Number, required: true, default: 0 })
   apr: number;
 
@@ -48,7 +51,6 @@ export class Staking {
     default: TransactionStatusEnum.PENDING,
   })
   transactionStatus: TransactionStatusEnum;
-
 }
 
 export const StakingSchema = SchemaFactory.createForClass(Staking);

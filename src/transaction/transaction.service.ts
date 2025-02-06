@@ -116,6 +116,7 @@ export class TransactionService {
                 transaction.distributionHash,
                 user.walletAddress,
                 Number(transaction.poolType),
+                this.BigToNumber(parsedEvent.args[0]),
               );
               transaction.stakingStatus = StakingStatus.STAKED;
               await transaction.save();
@@ -210,6 +211,9 @@ export class TransactionService {
                 transaction.distributionHash,
                 user.walletAddress,
                 Number(transaction.poolType),
+                this.BigToNumber(
+                  parseEther(formatUnits(parsedEvent.args[0], 6)),
+                ),
               );
               transaction.stakingStatus = StakingStatus.STAKED;
               await transaction.save();
@@ -322,6 +326,7 @@ export class TransactionService {
           existingTransaction.distributionHash,
           walletAddress,
           Number(poolType),
+          this.BigToNumber(BigAmount),
         );
         existingTransaction.stakingStatus = StakingStatus.STAKED;
         await existingTransaction.save();
@@ -352,6 +357,7 @@ export class TransactionService {
     txHash: string,
     walletAddress: string,
     pooltype: number,
+    usdAmount: number,
   ) {
     const stakeDuration = await this.StakeDurationModel.findOne({
       poolType: pooltype,
@@ -452,6 +458,7 @@ export class TransactionService {
           receipt.status === 1
             ? TransactionStatusEnum.CONFIRMED
             : TransactionStatusEnum.FAILED,
+        usdAmount,
       },
       {
         new: true,
@@ -1137,6 +1144,42 @@ export class TransactionService {
   //   }
   // }
 
+  // async updateUsdAmountPerStake() {
+  //   const transactions = await this.Transaction.find({
+  //     stakingStatus: StakingStatus.STAKED,
+  //   });
+
+  //   // console.log({ transactions });
+
+  //   await Promise.all(
+  //     transactions.map(async (transaction) => {
+  //       const staking = await this.StakingModel.findOne({
+  //         txHash: transaction.distributionHash,
+  //         isReferred: false,
+  //       });
+  //       if (staking) {
+  //         if (transaction.chain === ChainEnum.BINANCE) {
+  //           await this.StakingModel.findByIdAndUpdate(staking._id, {
+  //             usdAmount: this.BigToNumber(
+  //               parseEther(formatUnits(transaction.amountBigNumber, 18)),
+  //             ),
+  //           });
+  //         } else {
+  //           console.log(
+  //             `Ethereum - ${this.BigToNumber(parseEther(formatUnits(transaction.amountBigNumber, 6)))}`,
+  //           );
+  //           await this.StakingModel.findByIdAndUpdate(staking._id, {
+  //             usdAmount: this.BigToNumber(
+  //               parseEther(formatUnits(transaction.amountBigNumber, 6)),
+  //             ),
+  //           });
+  //         }
+  //       }
+  //     }),
+  //   );
+  //   console.log('done');
+  // }
+
   // private hasRun = false;
   @Cron(CronExpression.EVERY_10_SECONDS)
   handleCron() {
@@ -1159,5 +1202,6 @@ export class TransactionService {
     //   '0x6a03f4383bcADBCf8B948a8A4058E07C55E7068b',
     //   12,
     // );
+    // this.updateUsdAmountPerStake();
   }
 }
