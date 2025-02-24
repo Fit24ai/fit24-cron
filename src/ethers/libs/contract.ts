@@ -16,8 +16,11 @@ export const binancePaymentContractAddress =
   '0x72e56adb351Bc1DA1A37B2C5bB6cA40fBB373322';
 export const ethereumPaymentContractAddress =
   '0x8B7547c84D435e96812b54B7d2AaEA48D4c49EDB';
+export const blokfitPaymentContractAddress =
+  '0xf914FAdDe64E2e965f62b0Abb44708D2e9234548';
 export const oldReferalContract = '0x082dEFbf3D076917B9DD6F0926E251eD96b50cbd';
 export const newReferalContract = '0xe486A621eD93178D9A68d0fa317FF19Da20c5BdB';
 export const Fit24BuyTokenIco = '0xA41fA216abCa8fEa5Ea609A2B11588645928F5CF';
 export const oldFit24BuyTokenIco = '0x56D7B993D4783ae981D57190626aA38E04886671';
-export const blokfitVestingContract = '0x15A7c4a3517929EAA55aB1064d094CbfeF74c779'
+export const blokfitVestingContract =
+  '0x15A7c4a3517929EAA55aB1064d094CbfeF74c779';

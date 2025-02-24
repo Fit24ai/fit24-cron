@@ -1,6 +1,7 @@
 export enum ChainEnum {
   ETHEREUM = 'ETHEREUM',
   BINANCE = 'BINANCE',
+  BLOCKFIT = "BLOCKFIT",
   POLYGON = 'POLYGON',
 }
 

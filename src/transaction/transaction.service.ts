@@ -8,6 +8,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { EthersService } from 'src/ethers/ethers.service';
 import {
   binancePaymentContractAddress,
+  blokfitPaymentContractAddress,
   ethereumPaymentContractAddress,
   oldFit24BuyTokenIco,
 } from 'src/ethers/libs/contract';
@@ -246,6 +247,103 @@ export class TransactionService {
           await this.buyToken(
             transaction,
             parseEther(formatUnits(parsedEvent.args[0], 6)),
+            user.walletAddress,
+            parsedEvent.args[1],
+            Number(parsedEvent.args[3]),
+            Number(parsedEvent.args[4]),
+          );
+        }
+      }),
+    );
+  }
+  async syncPaymentReceivedBlokfit(block: number) {
+    const fromBlock = await this.ethersService.blokfitProvider.getBlockNumber();
+    const events = await this.ethersService.blokfitProvider.getLogs({
+      address: blokfitPaymentContractAddress,
+      fromBlock: fromBlock - block,
+      toBlock: 'latest',
+      topics: [process.env.PAYMENT_RECEIVED_TOPIC],
+    });
+
+    console.log(events);
+
+    await Promise.all(
+      events.map(async (event) => {
+        const parsedEvent = this.ethersService.paymentInterface.parseLog(event);
+
+        console.log(parsedEvent);
+        const transaction = await this.Transaction.findOne({
+          transactionHash: event.transactionHash,
+        });
+
+        const cache = await this.redisService.get(
+          `transaction:${event.transactionHash}-${ChainEnum.BLOCKFIT}`,
+        );
+        if (cache) return;
+
+        if (transaction) {
+          const user = await this.User.findOne({
+            walletAddress: parsedEvent.args[2],
+          });
+          if (!user) return;
+
+          if (
+            transaction.distributionStatus === DistributionStatusEnum.PENDING ||
+            transaction.distributionStatus === DistributionStatusEnum.FAILED
+          ) {
+            transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
+            await transaction.save();
+
+            await this.buyToken(
+              transaction,
+              parsedEvent.args[0],
+              user.walletAddress,
+              parsedEvent.args[1],
+              Number(parsedEvent.args[3]),
+              Number(parsedEvent.args[4]),
+            );
+          } else if (transaction.stakingStatus === StakingStatus.FAILED) {
+            try {
+              await this.saveStakeTransaction(
+                transaction.distributionHash,
+                user.walletAddress,
+                Number(transaction.poolType),
+                this.BigToNumber(parsedEvent.args[0]),
+              );
+              transaction.stakingStatus = StakingStatus.STAKED;
+              await transaction.save();
+            } catch (error) {
+              console.log(error);
+              transaction.stakingStatus = StakingStatus.FAILED;
+              await transaction.save();
+            }
+          }
+        } else {
+          const user = await this.User.findOne({
+            walletAddress: parsedEvent.args[2],
+          });
+          if (!user) return;
+
+          await this.redisService.set(
+            `transaction:${event.transactionHash}-${ChainEnum.BLOCKFIT}`,
+            'PROCESSING',
+            {
+              EX: 30,
+            },
+          );
+
+          const transaction = new this.Transaction({
+            transactionHash: event.transactionHash,
+            chain: ChainEnum.BLOCKFIT,
+            distributionStatus: DistributionStatusEnum.PROCESSING,
+            user: user,
+          });
+
+          const newTransaction = await transaction.save();
+
+          await this.buyToken(
+            transaction,
+            parsedEvent.args[0],
             user.walletAddress,
             parsedEvent.args[1],
             Number(parsedEvent.args[3]),
@@ -510,7 +608,7 @@ export class TransactionService {
           console.error('Failed to parse filtered log:', error);
         }
       }
-    } else {
+    } else if (transaction.chain === 'BLOCKFIT') {
       const receipt =
         await this.ethersService.ethereumProvider.getTransactionReceipt(tx);
       const paymentLogs = receipt.logs.filter(
@@ -538,6 +636,37 @@ export class TransactionService {
               ),
               token: parsedLog.args[4],
               chain: ChainEnum.ETHEREUM,
+            });
+            console.log('done');
+          }
+        } catch (error) {
+          console.error('Failed to parse filtered log:', error);
+        }
+      }
+    } else {
+      console.log('BLOKFIT');
+      const receipt =
+        await this.ethersService.blokfitProvider.getTransactionReceipt(tx);
+      const paymentLogs = receipt.logs.filter(
+        (log) => log.topics[0] === process.env.REFERRAL_INCOME_RECEIVED,
+      );
+      for (const log of paymentLogs) {
+        try {
+          const parsedLog = this.ethersService.paymentInterface.parseLog(log);
+          console.log('Parsed Log:', parsedLog.args);
+          const ref = await this.referrlaTransaction.findOne({
+            transactionHash: tx,
+          });
+          console.log(ref);
+          if (!ref) {
+            await this.referrlaTransaction.create({
+              transactionHash: tx,
+              referrer: parsedLog.args[0],
+              buyer: parsedLog.args[1],
+              buyAmount: this.BigToNumber(parsedLog.args[2]),
+              referralIncome: this.BigToNumber(parsedLog.args[3]),
+              token: parsedLog.args[4],
+              chain: ChainEnum.BLOCKFIT,
             });
             console.log('done');
           }
@@ -1164,6 +1293,9 @@ export class TransactionService {
   //               parseEther(formatUnits(transaction.amountBigNumber, 18)),
   //             ),
   //           });
+  //           console.log(
+  //             `Binance - ${this.BigToNumber(parseEther(formatUnits(transaction.amountBigNumber, 18)))}`,
+  //           );
   //         } else {
   //           console.log(
   //             `Ethereum - ${this.BigToNumber(parseEther(formatUnits(transaction.amountBigNumber, 6)))}`,
@@ -1188,6 +1320,7 @@ export class TransactionService {
     // }
     // this.hasRun = true;
     this.syncPaymentReceived(899);
+    this.syncPaymentReceivedBlokfit(899);
     this.syncEthereumPaymentReceived(199);
     // this.MigratePresaleData();
     // this.createRefIncomeMigrate();
