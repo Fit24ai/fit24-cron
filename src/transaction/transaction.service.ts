@@ -265,13 +265,14 @@ export class TransactionService {
       topics: [process.env.PAYMENT_RECEIVED_TOPIC],
     });
 
-    console.log(events);
+    console.log(events.length);
 
     await Promise.all(
       events.map(async (event) => {
         const parsedEvent = this.ethersService.paymentInterface.parseLog(event);
 
-        console.log(parsedEvent);
+        // console.log(parsedEvent);
+        console.log(event.transactionHash);
         const transaction = await this.Transaction.findOne({
           transactionHash: event.transactionHash,
         });
@@ -285,6 +286,7 @@ export class TransactionService {
           const user = await this.User.findOne({
             walletAddress: parsedEvent.args[2],
           });
+          console.log({ user });
           if (!user) return;
 
           if (
@@ -293,6 +295,7 @@ export class TransactionService {
           ) {
             transaction.distributionStatus = DistributionStatusEnum.PROCESSING;
             await transaction.save();
+            console.log({ parsedEvent });
 
             await this.buyToken(
               transaction,
@@ -368,7 +371,7 @@ export class TransactionService {
       BigAmount.toString(),
       walletAddress,
     );
-    console.log(isValid);
+    console.log({ isValid });
     if (!isValid) return;
     transaction;
 
@@ -608,7 +611,7 @@ export class TransactionService {
           console.error('Failed to parse filtered log:', error);
         }
       }
-    } else if (transaction.chain === 'BLOCKFIT') {
+    } else if (transaction.chain === 'ETHEREUM') {
       const receipt =
         await this.ethersService.ethereumProvider.getTransactionReceipt(tx);
       const paymentLogs = receipt.logs.filter(
@@ -830,6 +833,16 @@ export class TransactionService {
           providerReceiptBinance?.logs[providerReceiptBinance.logs.length - 1]!,
         );
         return this.verifyTransactionConditions(BinanceLogs, amount, user);
+
+      case ChainEnum.BLOCKFIT:
+        const providerReceiptBlokfit =
+          await this.ethersService.blokfitProvider.getTransactionReceipt(
+            transactionHash,
+          );
+        const BlokfitLogs = this.ethersService.paymentInterface.parseLog(
+          providerReceiptBlokfit?.logs[providerReceiptBlokfit.logs.length - 1]!,
+        );
+        return this.verifyTransactionConditions(BlokfitLogs, amount, user);
       default:
         throw new Error('Unsupported chain');
     }
