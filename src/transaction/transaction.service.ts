@@ -1273,45 +1273,6 @@ export class TransactionService {
   //   }
   // }
 
-  // async updateUsdAmountPerStake() {
-  //   const transactions = await this.Transaction.find({
-  //     stakingStatus: StakingStatus.STAKED,
-  //   });
-
-  //   // console.log({ transactions });
-
-  //   await Promise.all(
-  //     transactions.map(async (transaction) => {
-  //       const staking = await this.StakingModel.findOne({
-  //         txHash: transaction.distributionHash,
-  //         isReferred: false,
-  //       });
-  //       if (staking) {
-  //         if (transaction.chain === ChainEnum.BINANCE) {
-  //           await this.StakingModel.findByIdAndUpdate(staking._id, {
-  //             usdAmount: this.BigToNumber(
-  //               parseEther(formatUnits(transaction.amountBigNumber, 18)),
-  //             ),
-  //           });
-  //           console.log(
-  //             `Binance - ${this.BigToNumber(parseEther(formatUnits(transaction.amountBigNumber, 18)))}`,
-  //           );
-  //         } else {
-  //           console.log(
-  //             `Ethereum - ${this.BigToNumber(parseEther(formatUnits(transaction.amountBigNumber, 6)))}`,
-  //           );
-  //           await this.StakingModel.findByIdAndUpdate(staking._id, {
-  //             usdAmount: this.BigToNumber(
-  //               parseEther(formatUnits(transaction.amountBigNumber, 6)),
-  //             ),
-  //           });
-  //         }
-  //       }
-  //     }),
-  //   );
-  //   console.log('done');
-  // }
-
   // private hasRun = false;
   @Cron(CronExpression.EVERY_10_SECONDS)
   handleCron() {

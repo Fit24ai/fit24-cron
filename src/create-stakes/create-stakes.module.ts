@@ -11,7 +11,18 @@ import {
   ReferralTrail,
   ReferralTrailSchema,
 } from 'src/staking/schema/referralTrail.schema';
-import { PendingStakes, PendingStakesSchema } from 'src/staking/schema/pendingStakes.schema';
+import {
+  PendingStakes,
+  PendingStakesSchema,
+} from 'src/staking/schema/pendingStakes.schema';
+import {
+  UserTotalBusiness,
+  UserTotalBusinessSchema,
+} from 'src/staking/schema/user-total-business';
+import {
+  UserTotalBusinessAfter1Dec,
+  UserTotalBusinessAfter1DecSchema,
+} from 'src/staking/schema/user-total-business-after-1dec';
 
 @Module({
   imports: [
@@ -20,6 +31,11 @@ import { PendingStakes, PendingStakesSchema } from 'src/staking/schema/pendingSt
       { name: StakeDuration.name, schema: StakeDurationSchema },
       { name: ReferralTrail.name, schema: ReferralTrailSchema },
       { name: PendingStakes.name, schema: PendingStakesSchema },
+      { name: UserTotalBusiness.name, schema: UserTotalBusinessSchema },
+      {
+        name: UserTotalBusinessAfter1Dec.name,
+        schema: UserTotalBusinessAfter1DecSchema,
+      },
     ]),
   ],
   providers: [CreateStakesService, EthersService],

@@ -14,6 +14,8 @@ import {
 } from 'src/staking/schema/referralTrail.schema';
 import { StakeDuration } from 'src/staking/schema/stakeDuration.schema';
 import { Staking } from 'src/staking/schema/staking.schema';
+import { UserTotalBusiness } from 'src/staking/schema/user-total-business';
+import { UserTotalBusinessAfter1Dec } from 'src/staking/schema/user-total-business-after-1dec';
 import { IRefStakeLogs } from 'src/transaction/types/logs';
 import {
   PendingStakesEnum,
@@ -33,6 +35,10 @@ export class CreateStakesService {
     private referralTrailModel: Model<ReferralTrail>,
     @InjectModel(StakeDuration.name)
     private StakeDurationModel: Model<StakeDuration>,
+    @InjectModel(UserTotalBusiness.name)
+    private userTotalBusinessModel: Model<UserTotalBusiness>,
+    @InjectModel(UserTotalBusinessAfter1Dec.name)
+    private userTotalBusinessAfter1DecModel: Model<UserTotalBusinessAfter1Dec>,
   ) {}
 
   async getUsersAndUpdate() {
@@ -395,6 +401,414 @@ export class CreateStakesService {
   //   return await fetchTeamWithLevels([userAddress], 1, []);
   // }
 
+  async getUserTotalTokenStaked2(walletAddress: string) {
+    const stakes = await this.StakingModel.find({
+      walletAddress,
+      isReferred: false,
+    });
+    let tokens = 0;
+    let usdTokens = 0;
+    for (const stake of stakes) {
+      tokens += stake.amount;
+      usdTokens += stake.usdAmount;
+    }
+    return { tokens, usdTokens };
+  }
+
+  async getUserTotalTokenStaked2After1Dec(walletAddress: string) {
+    const stakes = await this.StakingModel.find({
+      walletAddress,
+      transactionStatus: TransactionStatusEnum.CONFIRMED,
+      isReferred: false,
+      startTime: { $gte: 1732991400 },
+    });
+    let tokens = 0;
+    let usdTokens = 0;
+    for (const stake of stakes) {
+      tokens += stake.amount;
+      usdTokens += stake.usdAmount;
+    }
+    return { tokens, usdTokens };
+  }
+
+  async getTotalReferralBusinessInfinity(
+    address: string,
+    checkedAddresses: Set<string> = new Set(),
+    currentLevel: number = 0,
+  ): Promise<{
+    totalStakedAmount: number;
+    totalUsdStakedAmount: number;
+    maxReferralLevel: number;
+  }> {
+    if (checkedAddresses.has(address)) {
+      return {
+        totalStakedAmount: 0,
+        totalUsdStakedAmount: 0,
+        maxReferralLevel: currentLevel - 1,
+      };
+    }
+    checkedAddresses.add(address);
+
+    try {
+      // Fetch the root user's tokens
+      // const { tokens: currentUserTokens, usdTokens: currentUserUsdTokens } =
+      //   await this.getUserTotalTokenStaked2(address);
+
+      const referrals = await this.referralTrailModel.findOne({
+        userAddress: address,
+      });
+
+      if (!referrals || !referrals.directMembers?.length) {
+        // No referrals, so return the root user's staked tokens.
+        return {
+          totalStakedAmount: 0,
+          totalUsdStakedAmount: 0,
+          maxReferralLevel: currentLevel,
+        };
+      }
+
+      // Fetch tokens for direct members concurrently.
+      const tokenPromises = referrals.directMembers.map(async (member) => {
+        const { tokens, usdTokens } =
+          await this.getUserTotalTokenStaked2(member);
+        return { tokens, usdTokens };
+      });
+
+      // Recursively fetch totals and levels for each direct member.
+      const recursivePromises = referrals.directMembers.map((member) =>
+        this.getTotalReferralBusinessInfinity(
+          member,
+          checkedAddresses,
+          currentLevel + 1,
+        ),
+      );
+
+      const [tokenResults, recursiveResults] = await Promise.all([
+        Promise.all(tokenPromises),
+        Promise.all(recursivePromises),
+      ]);
+
+      // Sum tokens for direct members.
+      const directTokensSum = tokenResults.reduce(
+        (sum, result) => sum + result.tokens,
+        0,
+      );
+      const directUsdTokensSum = tokenResults.reduce(
+        (sum, result) => sum + result.usdTokens,
+        0,
+      );
+
+      // Sum tokens from recursive referrals.
+      const recursiveTokensSum = recursiveResults.reduce(
+        (sum, result) => sum + result.totalStakedAmount,
+        0,
+      );
+      const recursiveUsdTokensSum = recursiveResults.reduce(
+        (sum, result) => sum + result.totalUsdStakedAmount,
+        0,
+      );
+
+      // Determine the deepest referral level in the subtree.
+      const maxReferralLevelInSubtree = recursiveResults.reduce(
+        (maxLevel, result) => Math.max(maxLevel, result.maxReferralLevel),
+        currentLevel,
+      );
+
+      // Include the current (root) user's tokens in the totals.
+      return {
+        totalStakedAmount: directTokensSum + recursiveTokensSum,
+        totalUsdStakedAmount: directUsdTokensSum + recursiveUsdTokensSum,
+        maxReferralLevel: maxReferralLevelInSubtree,
+      };
+    } catch (error) {
+      console.error('Error fetching staked amounts:', error);
+      return {
+        totalStakedAmount: 0,
+        totalUsdStakedAmount: 0,
+        maxReferralLevel: currentLevel,
+      };
+    }
+  }
+
+  async getTotalReferralBusinessInfinityAfter1Dec(
+    address: string,
+    checkedAddresses: Set<string> = new Set(),
+    currentLevel: number = 0,
+  ): Promise<{
+    totalStakedAmount: number;
+    totalUsdStakedAmount: number;
+    maxReferralLevel: number;
+  }> {
+    if (checkedAddresses.has(address)) {
+      return {
+        totalStakedAmount: 0,
+        totalUsdStakedAmount: 0,
+        maxReferralLevel: currentLevel - 1,
+      };
+    }
+    checkedAddresses.add(address);
+
+    try {
+      // Fetch the root user's tokens
+      // const { tokens: currentUserTokens, usdTokens: currentUserUsdTokens } =
+      //   await this.getUserTotalTokenStaked2(address);
+
+      const referrals = await this.referralTrailModel.findOne({
+        userAddress: address,
+      });
+
+      if (!referrals || !referrals.directMembers?.length) {
+        // No referrals, so return the root user's staked tokens.
+        return {
+          totalStakedAmount: 0,
+          totalUsdStakedAmount: 0,
+          maxReferralLevel: currentLevel,
+        };
+      }
+
+      // Fetch tokens for direct members concurrently.
+      const tokenPromises = referrals.directMembers.map(async (member) => {
+        const { tokens, usdTokens } =
+          await this.getUserTotalTokenStaked2After1Dec(member);
+        return { tokens, usdTokens };
+      });
+
+      // Recursively fetch totals and levels for each direct member.
+      const recursivePromises = referrals.directMembers.map((member) =>
+        this.getTotalReferralBusinessInfinityAfter1Dec(
+          member,
+          checkedAddresses,
+          currentLevel + 1,
+        ),
+      );
+
+      const [tokenResults, recursiveResults] = await Promise.all([
+        Promise.all(tokenPromises),
+        Promise.all(recursivePromises),
+      ]);
+
+      // Sum tokens for direct members.
+      const directTokensSum = tokenResults.reduce(
+        (sum, result) => sum + result.tokens,
+        0,
+      );
+      const directUsdTokensSum = tokenResults.reduce(
+        (sum, result) => sum + result.usdTokens,
+        0,
+      );
+
+      // Sum tokens from recursive referrals.
+      const recursiveTokensSum = recursiveResults.reduce(
+        (sum, result) => sum + result.totalStakedAmount,
+        0,
+      );
+      const recursiveUsdTokensSum = recursiveResults.reduce(
+        (sum, result) => sum + result.totalUsdStakedAmount,
+        0,
+      );
+
+      // Determine the deepest referral level in the subtree.
+      const maxReferralLevelInSubtree = recursiveResults.reduce(
+        (maxLevel, result) => Math.max(maxLevel, result.maxReferralLevel),
+        currentLevel,
+      );
+
+      // Include the current (root) user's tokens in the totals.
+      return {
+        totalStakedAmount: directTokensSum + recursiveTokensSum,
+        totalUsdStakedAmount: directUsdTokensSum + recursiveUsdTokensSum,
+        maxReferralLevel: maxReferralLevelInSubtree,
+      };
+    } catch (error) {
+      console.error('Error fetching staked amounts:', error);
+      return {
+        totalStakedAmount: 0,
+        totalUsdStakedAmount: 0,
+        maxReferralLevel: currentLevel,
+      };
+    }
+  }
+
+  async getEligibleReferralBusiness(userAddress: string) {
+    const referredStakes = await this.StakingModel.find({
+      walletAddress: userAddress,
+      isReferred: true,
+      transactionStatus: TransactionStatusEnum.CONFIRMED,
+    });
+
+    const stakePromises = referredStakes.map(async (stake) => {
+      const refStake = await this.StakingModel.findOne({
+        stakeId: stake.refId,
+        transactionStatus: TransactionStatusEnum.CONFIRMED,
+      });
+
+      return {
+        amount: refStake ? refStake.amount : 0,
+        usdAmount: refStake ? refStake.usdAmount : 0,
+      };
+    });
+
+    const amounts = await Promise.all(stakePromises);
+    const totalAmount = amounts.reduce((sum, data) => sum + data.amount, 0);
+    const totalUsdAmount = amounts.reduce(
+      (sum, data) => sum + data.usdAmount,
+      0,
+    );
+    return { totalAmount, totalUsdAmount };
+  }
+
+  async getEligibleReferralBusinessAfter1Dec(userAddress: string) {
+    const referredStakes = await this.StakingModel.find({
+      walletAddress: userAddress,
+      isReferred: true,
+      startTime: { $gte: 1732991400 },
+      transactionStatus: TransactionStatusEnum.CONFIRMED,
+    });
+
+    const stakePromises = referredStakes.map(async (stake) => {
+      const refStake = await this.StakingModel.findOne({
+        stakeId: stake.refId,
+        startTime: { $gte: 1732991400 },
+        transactionStatus: TransactionStatusEnum.CONFIRMED,
+        isReferred: false,
+      });
+
+      return {
+        amount: refStake ? refStake.amount : 0,
+        usdAmount: refStake ? refStake.usdAmount : 0,
+      };
+    });
+
+    const amounts = await Promise.all(stakePromises);
+    const totalAmount = amounts.reduce((sum, data) => sum + data.amount, 0);
+    const totalUsdAmount = amounts.reduce(
+      (sum, data) => sum + data.usdAmount,
+      0,
+    );
+    return { totalAmount, totalUsdAmount };
+  }
+
+  async updateAllUsersBusiness() {
+    const users = await this.ethersService.icoContract.getAllUsers();
+    console.log(`Total users: ${users.length}`);
+
+    // Use map index for logging if needed
+    await Promise.all(
+      users.map(async (user, idx) => {
+        await this.updateUserBusiness(user);
+      }),
+    );
+
+    console.log('All users updated.');
+  }
+
+  async updateAllUsersBusinessAfter1Dec() {
+    const users = await this.ethersService.icoContract.getAllUsers();
+    console.log(`Total users: ${users.length}`);
+
+    // Use map index for logging if needed
+    await Promise.all(
+      users.map(async (user, idx) => {
+        await this.updateUserBusinessAfter1Dec(user);
+      }),
+    );
+
+    console.log('All users updated.');
+  }
+
+  async updateUserBusiness(address: string) {
+    try {
+      // Execute all independent API calls concurrently
+      const [
+        selfStakes,
+        totalReferralStakes,
+        eligibleReferralStakes,
+        userLevel,
+      ] = await Promise.all([
+        this.getUserTotalTokenStaked2(address),
+        this.getTotalReferralBusinessInfinity(address),
+        this.getEligibleReferralBusiness(address),
+        this.getUserEligibleLevel(address),
+      ]);
+
+      console.log({
+        address: address,
+        selfStakes: selfStakes,
+        totalReferralStakes: totalReferralStakes,
+        eligibleReferralStakes: eligibleReferralStakes,
+        userLevel: userLevel,
+      });
+
+      // Consolidate update data
+      const updateData = {
+        walletAddress: address,
+        eligibleLevel: userLevel.level,
+        totalLevel: totalReferralStakes.maxReferralLevel,
+        selfStakes: selfStakes.tokens,
+        selfStakesUsd: selfStakes.usdTokens,
+        eligibleReferralBusiness: eligibleReferralStakes.totalAmount,
+        eligibleReferralBusinessUsd: eligibleReferralStakes.totalUsdAmount,
+        totalReferralBusiness: totalReferralStakes.totalStakedAmount,
+        totalReferralBusinessUsd: totalReferralStakes.totalUsdStakedAmount,
+      };
+
+      // Use a single upsert operation to either update or create the record
+      await this.userTotalBusinessModel.updateOne(
+        { walletAddress: address },
+        { $set: updateData },
+        { upsert: true },
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async updateUserBusinessAfter1Dec(address: string) {
+    try {
+      const [
+        selfStakes,
+        totalReferralStakes,
+        eligibleReferralStakes,
+        userLevel,
+      ] = await Promise.all([
+        this.getUserTotalTokenStaked2After1Dec(address),
+        this.getTotalReferralBusinessInfinityAfter1Dec(address),
+        this.getEligibleReferralBusinessAfter1Dec(address),
+        this.getUserEligibleLevel(address),
+      ]);
+
+      console.log({
+        address: address,
+        selfStakes: selfStakes,
+        totalReferralStakes: totalReferralStakes,
+        eligibleReferralStakes: eligibleReferralStakes,
+        userLevel: userLevel,
+      });
+
+      // Consolidate update data
+      const updateData = {
+        walletAddress: address,
+        eligibleLevel: userLevel.level,
+        totalLevel: totalReferralStakes.maxReferralLevel,
+        selfStakes: selfStakes.tokens,
+        selfStakesUsd: selfStakes.usdTokens,
+        eligibleReferralBusiness: eligibleReferralStakes.totalAmount,
+        eligibleReferralBusinessUsd: eligibleReferralStakes.totalUsdAmount,
+        totalReferralBusiness: totalReferralStakes.totalStakedAmount,
+        totalReferralBusinessUsd: totalReferralStakes.totalUsdStakedAmount,
+      };
+
+      // Use a single upsert operation to either update or create the record
+      await this.userTotalBusinessAfter1DecModel.updateOne(
+        { walletAddress: address },
+        { $set: updateData },
+        { upsert: true },
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   // private hasRun = false;
   @Cron(CronExpression.EVERY_30_MINUTES)
   handleCron() {
@@ -404,6 +818,8 @@ export class CreateStakesService {
     // this.hasRun = true;
     this.updateReferralTrail();
     this.getUsersAndUpdate();
+    this.updateAllUsersBusiness();
+    this.updateAllUsersBusinessAfter1Dec();
     // this.getTeamWithLevelsAndTotal('0x7756F546D687d0109C397Ee57d40bbF47305288F');
     // this.activatePendingStakeForUser(
     //   '0x62997A47AF6A87bEaB3199F1705110Fa3f377840',
