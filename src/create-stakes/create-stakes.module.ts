@@ -23,6 +23,10 @@ import {
   UserTotalBusinessAfter1Dec,
   UserTotalBusinessAfter1DecSchema,
 } from 'src/staking/schema/user-total-business-after-1dec';
+import {
+  DeactivateStakesUsers,
+  DeactivateStakesUsersSchema,
+} from 'src/staking/schema/deactivateStakesUsers.schema';
 
 @Module({
   imports: [
@@ -35,6 +39,10 @@ import {
       {
         name: UserTotalBusinessAfter1Dec.name,
         schema: UserTotalBusinessAfter1DecSchema,
+      },
+      {
+        name: DeactivateStakesUsers.name,
+        schema: DeactivateStakesUsersSchema,
       },
     ]),
   ],

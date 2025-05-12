@@ -1293,9 +1293,9 @@ export class TransactionService {
     //   return;
     // }
     // this.hasRun = true;
-    this.syncPaymentReceived(899);
-    this.syncPaymentReceivedBlokfit(899);
-    this.syncEthereumPaymentReceived(199);
+    // this.syncPaymentReceived(899);
+    // this.syncPaymentReceivedBlokfit(899);
+    // this.syncEthereumPaymentReceived(199);
     // this.MigratePresaleData();
     // this.createRefIncomeMigrate();
     // this.updatePresaleTransaction();
