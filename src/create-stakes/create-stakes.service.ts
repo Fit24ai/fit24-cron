@@ -1,12 +1,17 @@
 // const ether = new EthersService();
 
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import * as XLSX from 'xlsx';
+import * as fs from 'fs';
+import { InjectModel, raw } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import axios from 'axios';
 import BigNumber from 'bignumber.js';
+import { format } from 'date-fns';
 import { formatUnits, getAddress } from 'ethers';
 import { Model } from 'mongoose';
 import { EthersService } from 'src/ethers/ethers.service';
+import { IcoContract } from 'src/ethers/libs/contract';
 import { DeactivateStakesUsers } from 'src/staking/schema/deactivateStakesUsers.schema';
 import { PendingStakes } from 'src/staking/schema/pendingStakes.schema';
 import {
@@ -816,6 +821,7 @@ export class CreateStakesService {
     const users = await this.deactivateStakesUsersModel.find();
 
     for (const user of users) {
+      console.log(`Processing user: ${user.walletAddress}`);
       // if (user.walletAddress !== '0xb8A8aCC33209BF27cA3779128dA29695434D8ae7')
       //   continue;
       // const stakeIds = await this.getStakeIds(user.walletAddress);
@@ -932,7 +938,7 @@ export class CreateStakesService {
       if (!existingUser) {
         await this.deactivateStakesUsersModel.create({
           walletAddress: user,
-          isReferred: null,
+          isReferred: true,
           stakeIds: [],
         });
       }
@@ -985,6 +991,7 @@ export class CreateStakesService {
 
   async getTotalReferralTrail1(address: string): Promise<any[]> {
     const data: any[] = [];
+    data.push(address);
 
     const referrals = await this.referralTrailModel.findOne({
       userAddress: address,
@@ -1152,7 +1159,9 @@ export class CreateStakesService {
   }
 
   async getTeam(address: string) {
-    const data = await this.getTotalReferralTrail1(address);
+    const finalAddress = await getAddress(address);
+    console.log({ finalAddress });
+    const data = await this.getTotalReferralTrail1(finalAddress);
     console.log(JSON.stringify({ data, count: data.length }, null, 2));
   }
 
@@ -1169,12 +1178,17 @@ export class CreateStakesService {
       console.log('Processing:', user.walletAddress);
 
       // Skip any blocked wallet addresses (you'll need to define this array)
-      if (blockedMembers.includes(user.walletAddress)) {
+      // if (blockedMembers.includes(user.walletAddress)) {
+      //   data.blockedMembers++;
+      //   console.log(' → Skipped (blocked)');
+      //   continue;
+      // }
+      // data.remainingMembers++;
+      if (!membersToUnblock.includes(user.walletAddress)) {
         data.blockedMembers++;
         console.log(' → Skipped (blocked)');
         continue;
       }
-      data.remainingMembers++;
 
       // Activate each stake and $pull it out of the stakeIds array
       for (const stakeId of user.stakeIds) {
@@ -1205,6 +1219,246 @@ export class CreateStakesService {
     return data;
   }
 
+  async getUserTotalPendingReward(address: string) {
+    const pendingReward =
+      await this.ethersService.icoContract.getUserTotalPendingReward(address);
+    return {
+      // bigAmount: pendingReward,
+      rawAmount: Number(formatUnits(pendingReward, 18)),
+      amount: Number(formatUnits(pendingReward, 18)).toFixed(2),
+      address: address,
+    };
+  }
+
+  async getUsersPendingRewardDetails() {
+    const addresses = [
+      '0xDF7621E44D20C99bE883B01aB904a4FD2c252Df4',
+      '0x45c2C88A72bCFBdD28180c02bcE622df14DD787d',
+      '0x6baFa95BEa5206ADf2EDA29694608093ef5ce2C3',
+      '0xF794d6C192a35Ea2fCC5595B92C4cb9FAe7A23f5',
+      '0x29F53F7604877e24D0C8453938931afD0381b269',
+      '0x37161362B19486033Aceb81637e252652fA0Ad98',
+      '0x7c9Cca6507B3be499123D0d14AADd155bBa34693',
+      '0x6B7f651A55d50A46887Dd8b2432309E421f4487F',
+      '0x14968f85E06eB0e3A0b0a6E3e39772f2b04AA0Fb',
+      '0xC143a84CFdC55b549F48D934095628E0034e037B',
+      '0xC07c8Be152CB8Bb4B7098fCB79ED4f43119C9b54',
+      '0x68cFfa7527d0ed4e086ff302071daD2924AC432a',
+      '0xE77C97adC19D5546de5857d11DE5383A04611A74',
+      '0xA6D4B8054A596Ae606cc8177326D8EDb731E44Ea',
+      '0x0b49C0C8e97088C1Dfb04735bd99BA08B25E396c',
+      '0xa44E14d2A64874040890b8810EbD062194514afd',
+      '0x183bcd879A24404171C4EE2f2a74AbB28Fe8BCa2',
+      '0xF57DD69Dc84cE7c5FCec41F14BAFe977c2A39980',
+      '0x1a035A8D459D9e240790Bcd2aCC6afC1b79c7000',
+      '0x4543DfD15d18d5E569283777280F9cDb3e9A7f2d',
+      '0x16615B3F0B422717828c287A8e8186FEd0688d12',
+      '0xE8ae26BdC694eD60A54809d926Eed11f3600e45C',
+      '0x0846cc7B3eD99758aE1Dff727e32edD0f7B6129e',
+    ];
+    let totalAmount = 0;
+
+    const pendingRewards = await Promise.all(
+      addresses.map(async (address) => {
+        const reward = await this.getUserTotalPendingReward(address);
+        totalAmount += reward.rawAmount;
+        return reward;
+      }),
+    );
+
+    console.log({ pendingRewards, count: pendingRewards.length });
+    console.log({ totalAmount: totalAmount.toFixed(2) });
+  }
+
+  async getALLUsersTentativeWithdrawAmount() {
+    let totalAmount = 0;
+    let totalUsers = 0;
+    const users = await this.ethersService.icoContract.getAllUsers();
+    const usersLength = users.length;
+    await Promise.all(
+      users.map(async (user) => {
+        const amount =
+          await this.ethersService.icoContract.getUserTotalPendingReward(user);
+        const convertedAmount = Number(formatUnits(amount, 18));
+        console.log({
+          user,
+          amount: convertedAmount.toFixed(2),
+          bigAmount: amount,
+        });
+        totalAmount += convertedAmount;
+        totalUsers++;
+      }),
+    );
+    console.log({ totalAmount, totalUsers, usersLength });
+  }
+
+  // async getAllTokenTransfers(block: number) {
+  //   const fromBlock = await this.ethersService.blokfitProvider.getBlockNumber();
+  //   console.log({ fromBlock });
+  //   const events = await this.ethersService.blokfitProvider.getLogs({
+  //     address: IcoContract,
+  //     fromBlock: 114619 - block,
+  //     toBlock: 'latest',
+  //     // topics: [
+  //     //   '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+  //     // ],
+  //   });
+  //   console.log({ events });
+  // }
+
+  // async getAllTokenTransfers() {
+  //   // Constants for topics
+  //   const REWARD_TOPIC =
+  //     '0x7e3342272e395a2abbb8b39e07ea2b803cca0a2c2bd61337771ba941d677394c';
+  //   const TRANSFER_TOPIC =
+  //     '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+
+  //   const currentBlock = 114620;
+  //   console.log({ currentBlock });
+
+  //   const events = await this.ethersService.blokfitProvider.getLogs({
+  //     address: IcoContract,
+  //     fromBlock: currentBlock - 50000,
+  //     toBlock: 'latest',
+  //     topics: [REWARD_TOPIC],
+  //   });
+
+  //   await Promise.all(
+  //     events.map(async (event) => {
+  //       const parsedEvent = this.ethersService.icoInterface.parseLog(event);
+  //       console.log({ parsedEvent });
+  //     }),
+  //   );
+  // }
+
+  // async getAllTokenTransfers() {
+  //   const REWARD_TOPIC =
+  //     '0x4f03df6410de6abcc39fd6f082c0a1c56c99a948c1ffb107666d86e55696119e';
+
+  //   const currentBlock = 114620;
+  //   const fromBlock = currentBlock - 50000;
+  //   const toBlock = 'latest';
+
+  //   const events = await this.ethersService.blokfitProvider.getLogs({
+  //     address: IcoContract,
+  //     fromBlock,
+  //     toBlock,
+  //     topics: [REWARD_TOPIC],
+  //   });
+
+  //   const result = await Promise.all(
+  //     events.map(async (event) => {
+  //       const parsedEvent = this.ethersService.icoInterface.parseLog(event);
+
+  //       const block = await this.ethersService.blokfitProvider.getBlock(
+  //         event.blockNumber,
+  //       );
+
+  //       return {
+  //         txHash: event.transactionHash,
+  //         address: parsedEvent.args[0],
+  //         amount: formatUnits(parsedEvent.args[1], 18),
+  //         time: new Date(block.timestamp * 1000).toISOString(),
+  //       };
+  //     }),
+  //   );
+
+  //   console.log(result);
+  // }
+
+  async getAllTokenTransfers() {
+    const REWARD_TOPIC =
+      '0x4f03df6410de6abcc39fd6f082c0a1c56c99a948c1ffb107666d86e55696119e';
+
+    const currentBlock = 114620;
+    const fromBlock = currentBlock - 50000;
+    const toBlock = 'latest';
+
+    const events = await this.ethersService.blokfitProvider.getLogs({
+      address: IcoContract,
+      fromBlock,
+      toBlock,
+      topics: [REWARD_TOPIC],
+    });
+
+    const now = Date.now();
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+    const result = await Promise.all(
+      events.map(async (event) => {
+        const parsedEvent = this.ethersService.icoInterface.parseLog(event);
+        const block = await this.ethersService.blokfitProvider.getBlock(
+          event.blockNumber,
+        );
+        const timestamp = block.timestamp * 1000;
+        console.log({ timestamp });
+
+        return {
+          txHash: event.transactionHash,
+          address: parsedEvent.args[0],
+          amount: Number(formatUnits(parsedEvent.args[1], 18)).toFixed(3),
+          time: format(new Date(timestamp), 'd MMMM yyyy, h:mm a'), // e.g., "1 July 2025, 3:42 PM"
+          timestamp,
+        };
+      }),
+    );
+
+    const last30DaysTx = result.filter(
+      (tx) => tx.timestamp >= now - THIRTY_DAYS_MS,
+    );
+
+    // console.log(last30DaysTx);
+    // Export to Excel
+    this.exportToExcel(last30DaysTx, 'token_transfers_last_30_days.xlsx');
+    console.log('Exported to token_transfers_last_30_days.xlsx');
+  }
+
+  exportToExcel = (data: any[], fileName: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'TokenTransfers');
+
+    const excelBuffer = XLSX.write(workbook, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    });
+
+    fs.writeFileSync(fileName, excelBuffer);
+  };
+
+  async fetchAndPrintLast30DaysTokenTransfers() {
+    try {
+      const response = await axios.get(
+        'https://blockfitscan.io/api/v2/transactions?filter=validated&type=token_transfer&limit=100',
+      );
+      console.log({ length: response.data.items.length });
+
+      const transactions = response.data.items;
+      const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const filtered = transactions
+        .filter(
+          (tx: any) =>
+            tx.transaction_types?.includes('token_transfer') &&
+            new Date(tx.timestamp).getTime() >= now - THIRTY_DAYS_MS,
+        )
+        .map((tx: any) => ({
+          txHash: tx.hash,
+          from: tx.from?.hash || '',
+          to: tx.decoded_input?.parameters?.[0]?.value || '',
+          amount: tx.decoded_input?.parameters?.[1]?.value || '0',
+          token: tx.to?.name || 'Unknown',
+          time: tx.timestamp,
+        }));
+
+      console.log(filtered);
+    } catch (error) {
+      console.error('Error fetching or processing transactions:', error);
+    }
+  }
+
   private hasRun = false;
   @Cron(CronExpression.EVERY_5_SECONDS)
   handleCron() {
@@ -1212,6 +1466,10 @@ export class CreateStakesService {
       return;
     }
     this.hasRun = true;
+    // this.getAllTokenTransfers(100);
+    // this.getAllTokenTransfers();
+    // this.fetchAndPrintLast30DaysTokenTransfers();
+    // this.getALLUsersTentativeWithdrawAmount();
     // this.updateReferralTrail();
     // this.getUsersAndUpdate();
     // this.updateAllUsersBusiness();
@@ -1225,7 +1483,7 @@ export class CreateStakesService {
     //   '0x85980f0cbd17aabd4d6e9b2092a0f060a659590e4d3a1bc63b969aa1beae91a7',
     // );
     // this.getUserLevel('0x0633931dD8A9c97327d0A4DA6f5c8fFd7Dd6c45F');
-    // this.getAllDeactivateStakesUsers();
+    this.getAllDeactivateStakesUsers();
     // this.getUserActiveStakes('0x53560340Cd3BBA4795A4C7C37B7d6071B97B09f2');
     // this.deactivateStake(3979);
     // this.checkStakes();
@@ -1236,8 +1494,10 @@ export class CreateStakesService {
     // );
     // this.getAllDeactivateStakesUsers();
     // this.getTeam('0xc741A7B64432C3D08D925ADce77835bd8F3234F6');
-    // this.getTeam("0x112FEe828b9e8c64fbF9Ec48264376b984d778eB")
-    this.activateDeactivatedStakes();
+    // this.getTeam('0xc741A7B64432C3D08D925ADce77835bd8F3234F6');
+
+    // this.activateDeactivatedStakes();
+    // this.getUsersPendingRewardDetails();
   }
 }
 
@@ -1457,4 +1717,20 @@ const blockedMembers = [
   '0xf3Cc7d1a05d32B3400417078d99aeC923902aD5c',
   '0x53560340Cd3BBA4795A4C7C37B7d6071B97B09f2',
   '0xc741A7B64432C3D08D925ADce77835bd8F3234F6',
+];
+
+const membersToUnblock = [
+  '0xc741A7B64432C3D08D925ADce77835bd8F3234F6',
+  '0x9ce5A301f45953EAB8e642Ad8B4aD77C3f38a714',
+  '0x8dD7a5d7E7244c00B42C638117EC3751631141c7',
+  '0x657b994302Cb54d2A0Cc4DF0140c0F7aAadD7770',
+  '0x46Af2f7a3036C6E0e43366f3960c91B9bb77B820',
+  '0x3d4602330Ea4aBf578154b9E711B778d8bb8e97B',
+  '0x28214faa57d16FC70AC99F67B9811f882C703Ee8',
+  '0x4D8aB1B5A9f504ff7A52Bd3127c7444D9Fd35826',
+  '0xd5E8e55562621edEa4048b2Dc8295B2D1666368b',
+  '0x8E9dA6A6F0E14122950c8c9A7a972140fB28e3F3',
+  '0x7A7fdFc006bB58Ef4D0ecC0C3442EC8E14C272F7',
+  '0xa43414A67755508546B0bC777B69A0BF7d1c6AFF',
+  '0x30a4d17e718BBe17cEBbbC0D9D5d3fBA14CD67ce',
 ];
